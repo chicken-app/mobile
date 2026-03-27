@@ -1,0 +1,13 @@
+// Ready for Django endpoints:
+GET /api/user/profile/           // Fetch user data
+PUT /api/user/profile/           // Update profile
+GET /api/user/addresses/         // List addresses
+POST /api/user/addresses/        // Add address
+PUT /api/user/addresses/{id}/    // Update address
+DELETE /api/user/addresses/{id}/ // Delete address
+GET /api/user/payments/          // Payment methods
+POST /api/user/payments/         // Add payment
+GET /api/loyalty/points/         // Points balance
+GET /api/loyalty/tiers/          // Tier information
+POST /api/referral/              // Generate referral code
+POST /api/auth/logout/           // Logout
