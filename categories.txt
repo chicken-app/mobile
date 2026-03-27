@@ -1,5 +1,0 @@
-// API endpoints ready for integration:
-GET /api/categories/          // Fetch all categories with subcategories
-GET /api/products/?category=chicken&subcategory=boneless  // Filtered products
-GET /api/products/?search=query // Search functionality
-POST /api/cart/                 // Sync cart with backend

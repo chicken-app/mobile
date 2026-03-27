@@ -1,0 +1,1420 @@
+<!-- checkout.html - Regular User Checkout -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="theme-color" content="#D11243" />
+    <title>Checkout - FreshCart</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      :root {
+        --primary: #d11243;
+        --primary-dark: #9e0b32;
+        --primary-light: #fff0f3;
+        --secondary: #ffc107;
+        --dark: #1a1a1a;
+        --gray: #666;
+        --light-gray: #f5f5f5;
+        --border: #e0e0e0;
+        --white: #ffffff;
+        --success: #4caf50;
+        --warning: #ff9800;
+        --info: #2196f3;
+        --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.12);
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
+        background: var(--light-gray);
+        color: var(--dark);
+        overflow-x: hidden;
+        padding-bottom: 100px;
+      }
+
+      /* Header */
+      .header {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        background: var(--white);
+        z-index: 1000;
+        box-shadow: var(--shadow);
+      }
+
+      .header-top {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        gap: 12px;
+      }
+
+      .back-btn {
+        width: 40px;
+        height: 40px;
+        border: none;
+        background: var(--light-gray);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        cursor: pointer;
+        color: var(--dark);
+      }
+
+      .header-title {
+        font-size: 18px;
+        font-weight: 700;
+        flex: 1;
+      }
+
+      .secure-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--success);
+        font-weight: 600;
+      }
+
+      /* Progress Steps */
+      .progress-bar {
+        display: flex;
+        justify-content: center;
+        padding: 20px 16px;
+        background: var(--white);
+        margin-bottom: 12px;
+      }
+
+      .step {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .step-circle {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--light-gray);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--gray);
+        border: 2px solid var(--border);
+      }
+
+      .step.active .step-circle {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+      }
+
+      .step.completed .step-circle {
+        background: var(--success);
+        color: white;
+        border-color: var(--success);
+      }
+
+      .step-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--gray);
+      }
+
+      .step.active .step-label {
+        color: var(--primary);
+      }
+
+      .step-line {
+        width: 40px;
+        height: 2px;
+        background: var(--border);
+        margin: 0 8px;
+      }
+
+      .step-line.completed {
+        background: var(--success);
+      }
+
+      /* Main Content */
+      .main-content {
+        margin-top: 64px;
+        padding: 16px;
+      }
+
+      .section-card {
+        background: var(--white);
+        border-radius: 16px;
+        margin-bottom: 16px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+      }
+
+      .section-header {
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .section-title {
+        font-size: 16px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .section-title i {
+        color: var(--primary);
+      }
+
+      .edit-btn {
+        font-size: 13px;
+        color: var(--primary);
+        font-weight: 600;
+        background: none;
+        border: none;
+        cursor: pointer;
+      }
+
+      .section-body {
+        padding: 16px;
+      }
+
+      /* User Info Display */
+      .user-info-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        background: var(--primary-light);
+        border-radius: 12px;
+        margin-bottom: 16px;
+      }
+
+      .user-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--primary);
+      }
+
+      .user-details h3 {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      .user-details p {
+        font-size: 13px;
+        color: var(--gray);
+      }
+
+      /* Address Selection */
+      .address-option {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px;
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .address-option.selected {
+        border-color: var(--primary);
+        background: var(--primary-light);
+      }
+
+      .radio-circle {
+        width: 22px;
+        height: 22px;
+        border: 2px solid var(--border);
+        border-radius: 50%;
+        flex-shrink: 0;
+        margin-top: 2px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .address-option.selected .radio-circle {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: white;
+        font-size: 10px;
+      }
+
+      .address-content {
+        flex: 1;
+      }
+
+      .address-type {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--primary);
+        background: rgba(209, 18, 67, 0.1);
+        padding: 4px 10px;
+        border-radius: 6px;
+        margin-bottom: 8px;
+      }
+
+      .address-text {
+        font-size: 14px;
+        line-height: 1.5;
+        margin-bottom: 4px;
+      }
+
+      .address-contact {
+        font-size: 13px;
+        color: var(--gray);
+      }
+
+      /* Delivery Time */
+      .delivery-slot {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px;
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        margin-bottom: 10px;
+        cursor: pointer;
+      }
+
+      .delivery-slot.selected {
+        border-color: var(--primary);
+        background: var(--primary-light);
+      }
+
+      .slot-icon {
+        width: 40px;
+        height: 40px;
+        background: var(--light-gray);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        font-size: 18px;
+      }
+
+      .slot-info {
+        flex: 1;
+      }
+
+      .slot-time {
+        font-weight: 700;
+        margin-bottom: 2px;
+      }
+
+      .slot-price {
+        font-size: 13px;
+        color: var(--gray);
+      }
+
+      .slot-price.free {
+        color: var(--success);
+        font-weight: 600;
+      }
+
+      /* Payment Methods */
+      .payment-option {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        margin-bottom: 12px;
+        cursor: pointer;
+      }
+
+      .payment-option.selected {
+        border-color: var(--primary);
+        background: var(--primary-light);
+      }
+
+      .payment-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+      }
+
+      .payment-icon.cash {
+        background: #e8f5e9;
+        color: var(--success);
+      }
+      .payment-icon.upi {
+        background: #ede7f6;
+        color: #5e35b1;
+      }
+      .payment-icon.card {
+        background: #e3f2fd;
+        color: var(--info);
+      }
+      .payment-icon.wallet {
+        background: #fff3e0;
+        color: var(--warning);
+      }
+
+      .payment-info {
+        flex: 1;
+      }
+
+      .payment-name {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      .payment-desc {
+        font-size: 13px;
+        color: var(--gray);
+      }
+
+      .payment-check {
+        width: 24px;
+        height: 24px;
+        border: 2px solid var(--border);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 12px;
+      }
+
+      .payment-option.selected .payment-check {
+        background: var(--primary);
+        border-color: var(--primary);
+      }
+
+      /* Saved Cards */
+      .saved-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background: var(--light-gray);
+        border-radius: 10px;
+        margin-top: 8px;
+      }
+
+      .card-icon {
+        width: 40px;
+        height: 26px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+      }
+
+      .card-icon.visa {
+        background: #1a1f71;
+        color: white;
+      }
+      .card-icon.mastercard {
+        background: #eb001b;
+        color: white;
+      }
+
+      .card-details {
+        flex: 1;
+      }
+
+      .card-number {
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .card-expiry {
+        font-size: 12px;
+        color: var(--gray);
+      }
+
+      /* Order Summary */
+      .item-list {
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .item-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .item-row:last-child {
+        border-bottom: none;
+      }
+
+      .item-img {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        object-fit: cover;
+      }
+
+      .item-details {
+        flex: 1;
+      }
+
+      .item-name {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .item-meta {
+        font-size: 12px;
+        color: var(--gray);
+      }
+
+      .item-price {
+        font-weight: 700;
+        font-size: 14px;
+      }
+
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        font-size: 14px;
+      }
+
+      .summary-row.discount {
+        color: var(--success);
+      }
+
+      .summary-divider {
+        height: 1px;
+        background: var(--border);
+        margin: 12px 0;
+      }
+
+      .summary-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 12px;
+      }
+
+      .total-label {
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .total-amount {
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--primary);
+      }
+
+      /* Apply Coupon */
+      .coupon-section {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      .coupon-input {
+        flex: 1;
+        padding: 12px 16px;
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        font-size: 14px;
+      }
+
+      .coupon-input:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
+
+      .apply-btn {
+        padding: 12px 20px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .applied-coupon {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        background: #e8f5e9;
+        border-radius: 10px;
+        margin-bottom: 16px;
+      }
+
+      .applied-coupon i {
+        color: var(--success);
+      }
+
+      .coupon-code {
+        font-weight: 700;
+        color: var(--success);
+      }
+
+      .remove-coupon {
+        margin-left: auto;
+        color: var(--gray);
+        cursor: pointer;
+      }
+
+      /* Bottom Bar */
+      .bottom-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--white);
+        padding: 16px;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+      }
+
+      .bottom-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .total-section {
+        flex: 1;
+      }
+
+      .total-text {
+        font-size: 12px;
+        color: var(--gray);
+      }
+
+      .total-price {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--dark);
+      }
+
+      .pay-btn {
+        flex: 1;
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 16px 24px;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .pay-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      /* Success Modal */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 3000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s;
+      }
+
+      .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .success-modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.9);
+        background: white;
+        border-radius: 24px;
+        padding: 40px;
+        text-align: center;
+        width: 90%;
+        max-width: 360px;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s;
+        z-index: 3001;
+      }
+
+      .modal-overlay.active + .success-modal,
+      .success-modal.active {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      .success-icon {
+        width: 80px;
+        height: 80px;
+        background: var(--success);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 40px;
+        color: white;
+        animation: scaleIn 0.5s ease;
+      }
+
+      @keyframes scaleIn {
+        0% {
+          transform: scale(0);
+        }
+        50% {
+          transform: scale(1.2);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .success-title {
+        font-size: 24px;
+        font-weight: 800;
+        margin-bottom: 8px;
+      }
+
+      .success-text {
+        color: var(--gray);
+        margin-bottom: 20px;
+        font-size: 14px;
+      }
+
+      .order-id-box {
+        background: var(--light-gray);
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+      }
+
+      .order-label {
+        font-size: 12px;
+        color: var(--gray);
+        margin-bottom: 4px;
+      }
+
+      .order-id {
+        font-family: monospace;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--dark);
+      }
+
+      .track-btn {
+        width: 100%;
+        padding: 16px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      /* UPI Apps Grid */
+      .upi-apps {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .upi-app {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 12px;
+        background: var(--light-gray);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .upi-app:active {
+        transform: scale(0.95);
+        background: var(--primary-light);
+      }
+
+      .upi-app-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+      }
+
+      .upi-app-name {
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      /* Toast */
+      .toast {
+        position: fixed;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%) translateY(100px);
+        background: var(--dark);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 25px;
+        font-size: 14px;
+        font-weight: 600;
+        z-index: 4000;
+        opacity: 0;
+        transition: all 0.3s;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      /* Loading Overlay */
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        z-index: 2500;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s;
+      }
+
+      .loading-overlay.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .spinner {
+        width: 60px;
+        height: 60px;
+        border: 4px solid var(--light-gray);
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .loading-text {
+        margin-top: 16px;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--gray);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-top">
+        <button class="back-btn" onclick="goBack()">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <h1 class="header-title">Checkout</h1>
+        <div class="secure-badge">
+          <i class="fas fa-shield-alt"></i>
+          <span>256-bit Secure</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Progress -->
+    <div class="progress-bar">
+      <div class="step completed">
+        <div class="step-circle"><i class="fas fa-check"></i></div>
+        <span class="step-label">Cart</span>
+      </div>
+      <div class="step-line completed"></div>
+      <div class="step active">
+        <div class="step-circle">2</div>
+        <span class="step-label">Address</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step">
+        <div class="step-circle">3</div>
+        <span class="step-label">Payment</span>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- User Info -->
+      <div class="section-card">
+        <div class="section-body" style="padding-bottom: 8px">
+          <div class="user-info-card">
+            <img
+              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop"
+              class="user-avatar"
+              alt="User"
+            />
+            <div class="user-details">
+              <h3 id="userName">Rahul Sharma</h3>
+              <p id="userPhone">+91 98765 43210</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delivery Address -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-map-marker-alt"></i>
+            Delivery Address
+          </h2>
+          <button class="edit-btn" onclick="addAddress()">+ Add New</button>
+        </div>
+        <div class="section-body">
+          <div class="address-option selected" onclick="selectAddress(this)">
+            <div class="radio-circle"><i class="fas fa-check"></i></div>
+            <div class="address-content">
+              <span class="address-type"><i class="fas fa-home"></i> Home</span>
+              <div class="address-text">
+                123, Green Valley Apartments, Andheri West, Mumbai - 400053
+              </div>
+              <div class="address-contact">+91 98765 43210</div>
+            </div>
+          </div>
+          <div class="address-option" onclick="selectAddress(this)">
+            <div class="radio-circle"></div>
+            <div class="address-content">
+              <span
+                class="address-type"
+                style="background: #e3f2fd; color: var(--info)"
+                ><i class="fas fa-briefcase"></i> Work</span
+              >
+              <div class="address-text">
+                456, Business Park, BKC, Mumbai - 400051
+              </div>
+              <div class="address-contact">+91 98765 43210</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delivery Slot -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-clock"></i>
+            Delivery Time
+          </h2>
+        </div>
+        <div class="section-body">
+          <div class="delivery-slot selected" onclick="selectSlot(this)">
+            <div class="radio-circle"><i class="fas fa-check"></i></div>
+            <div class="slot-icon"><i class="fas fa-bolt"></i></div>
+            <div class="slot-info">
+              <div class="slot-time">Express Delivery</div>
+              <div class="slot-price free">90 mins • FREE</div>
+            </div>
+          </div>
+          <div class="delivery-slot" onclick="selectSlot(this)">
+            <div class="radio-circle"></div>
+            <div class="slot-icon"><i class="fas fa-sun"></i></div>
+            <div class="slot-info">
+              <div class="slot-time">Morning Slot</div>
+              <div class="slot-price">Tomorrow, 7-10 AM • ₹40</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Method -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-credit-card"></i>
+            Payment Method
+          </h2>
+        </div>
+        <div class="section-body">
+          <!-- UPI -->
+          <div
+            class="payment-option selected"
+            onclick="selectPayment('upi', this)"
+          >
+            <div class="payment-icon upi"><i class="fas fa-qrcode"></i></div>
+            <div class="payment-info">
+              <div class="payment-name">UPI</div>
+              <div class="payment-desc">Pay using any UPI app</div>
+            </div>
+            <div class="payment-check"><i class="fas fa-check"></i></div>
+          </div>
+
+          <div class="upi-apps" id="upiApps">
+            <div class="upi-app" onclick="payWithUPI('gpay')">
+              <div class="upi-app-icon" style="color: #4285f4">
+                <i class="fab fa-google-pay"></i>
+              </div>
+              <span class="upi-app-name">GPay</span>
+            </div>
+            <div class="upi-app" onclick="payWithUPI('phonepe')">
+              <div class="upi-app-icon" style="color: #5f259f">
+                <i class="fas fa-mobile-alt"></i>
+              </div>
+              <span class="upi-app-name">PhonePe</span>
+            </div>
+            <div class="upi-app" onclick="payWithUPI('paytm')">
+              <div class="upi-app-icon" style="color: #00baf2">
+                <i class="fas fa-wallet"></i>
+              </div>
+              <span class="upi-app-name">Paytm</span>
+            </div>
+            <div class="upi-app" onclick="payWithUPI('other')">
+              <div class="upi-app-icon" style="color: var(--gray)">
+                <i class="fas fa-ellipsis-h"></i>
+              </div>
+              <span class="upi-app-name">Other</span>
+            </div>
+          </div>
+
+          <!-- Cards -->
+          <div
+            class="payment-option"
+            onclick="selectPayment('card', this)"
+            style="margin-top: 16px"
+          >
+            <div class="payment-icon card">
+              <i class="fas fa-credit-card"></i>
+            </div>
+            <div class="payment-info">
+              <div class="payment-name">Credit/Debit Card</div>
+              <div class="payment-desc">Visa, Mastercard, RuPay</div>
+            </div>
+            <div class="payment-check"><i class="fas fa-check"></i></div>
+          </div>
+
+          <div class="saved-card" id="savedCard" style="display: none">
+            <div class="card-icon visa"><i class="fab fa-cc-visa"></i></div>
+            <div class="card-details">
+              <div class="card-number">•••• •••• •••• 4242</div>
+              <div class="card-expiry">Expires 12/25</div>
+            </div>
+            <button class="edit-btn" onclick="changeCard()">Change</button>
+          </div>
+
+          <!-- Wallet -->
+          <div class="payment-option" onclick="selectPayment('wallet', this)">
+            <div class="payment-icon wallet"><i class="fas fa-wallet"></i></div>
+            <div class="payment-info">
+              <div class="payment-name">FreshCart Wallet</div>
+              <div class="payment-desc">Balance: ₹250</div>
+            </div>
+            <div class="payment-check"><i class="fas fa-check"></i></div>
+          </div>
+
+          <!-- Cash -->
+          <div class="payment-option" onclick="selectPayment('cash', this)">
+            <div class="payment-icon cash">
+              <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="payment-info">
+              <div class="payment-name">Cash on Delivery</div>
+              <div class="payment-desc">Pay when you receive</div>
+            </div>
+            <div class="payment-check"><i class="fas fa-check"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-shopping-bag"></i>
+            Order Summary
+          </h2>
+        </div>
+        <div class="section-body">
+          <!-- Coupon -->
+          <div class="coupon-section" id="couponSection">
+            <input
+              type="text"
+              class="coupon-input"
+              id="couponInput"
+              placeholder="Enter coupon code"
+            />
+            <button class="apply-btn" onclick="applyCoupon()">Apply</button>
+          </div>
+          <div class="applied-coupon" id="appliedCoupon" style="display: none">
+            <i class="fas fa-tag"></i>
+            <span>Coupon <span class="coupon-code">FRESH50</span> applied</span>
+            <span style="color: var(--success); font-weight: 600">-₹50</span>
+            <i class="fas fa-times remove-coupon" onclick="removeCoupon()"></i>
+          </div>
+
+          <!-- Items -->
+          <div class="item-list">
+            <div class="item-row">
+              <img
+                src="https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=100&h=100&fit=crop"
+                class="item-img"
+              />
+              <div class="item-details">
+                <div class="item-name">Chicken Breast Boneless</div>
+                <div class="item-meta">500g × 2</div>
+              </div>
+              <div class="item-price">₹498</div>
+            </div>
+            <div class="item-row">
+              <img
+                src="https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=100&h=100&fit=crop"
+                class="item-img"
+              />
+              <div class="item-details">
+                <div class="item-name">Mutton Curry Cut</div>
+                <div class="item-meta">1kg × 1</div>
+              </div>
+              <div class="item-price">₹899</div>
+            </div>
+          </div>
+
+          <div class="summary-divider"></div>
+          <div class="summary-row">
+            <span>Item Total</span>
+            <span>₹1,397</span>
+          </div>
+          <div class="summary-row">
+            <span>Delivery Fee</span>
+            <span style="color: var(--success); font-weight: 600">FREE</span>
+          </div>
+          <div
+            class="summary-row discount"
+            id="discountRow"
+            style="display: none"
+          >
+            <span>Discount</span>
+            <span>-₹50</span>
+          </div>
+          <div class="summary-row">
+            <span>Taxes & Charges</span>
+            <span>₹67</span>
+          </div>
+          <div class="summary-divider"></div>
+          <div class="summary-total">
+            <span class="total-label">Total Amount</span>
+            <span class="total-amount" id="totalAmount">₹1,464</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="height: 100px"></div>
+    </main>
+
+    <!-- Bottom Bar -->
+    <div class="bottom-bar">
+      <div class="bottom-content">
+        <div class="total-section">
+          <div class="total-text">Total to Pay</div>
+          <div class="total-price" id="bottomTotal">₹1,464</div>
+        </div>
+        <button class="pay-btn" id="payBtn" onclick="processPayment()">
+          <span>Pay Now</span>
+          <i class="fas fa-lock"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      <div class="loading-text">Processing payment...</div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal-overlay" id="modalOverlay"></div>
+    <div class="success-modal" id="successModal">
+      <div class="success-icon">
+        <i class="fas fa-check"></i>
+      </div>
+      <h2 class="success-title">Order Placed!</h2>
+      <p class="success-text">
+        Your order has been confirmed and is being prepared
+      </p>
+      <div class="order-id-box">
+        <div class="order-label">Order ID</div>
+        <div class="order-id" id="successOrderId">#FC-2024-001234</div>
+      </div>
+      <button class="track-btn" onclick="trackOrder()">Track Order</button>
+    </div>
+
+    <script>
+      // Check authentication and role
+      document.addEventListener("DOMContentLoaded", () => {
+        checkAuth();
+      });
+
+      function checkAuth() {
+        // In production: Verify JWT token with Django backend
+        const token = localStorage.getItem("authToken");
+        const userRole = localStorage.getItem("userRole"); // 'customer' or 'staff'
+
+        if (!token) {
+          window.location.href = "login.html?redirect=checkout";
+          return;
+        }
+
+        // If staff tries to access customer checkout, redirect
+        if (userRole === "staff") {
+          window.location.href = "staff-checkout.html";
+          return;
+        }
+
+        // Load user data
+        loadUserData();
+      }
+
+      function loadUserData() {
+        // Fetch from Django API
+        const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+        document.getElementById("userName").textContent =
+          userData.name || "Rahul Sharma";
+        document.getElementById("userPhone").textContent =
+          userData.phone || "+91 98765 43210";
+      }
+
+      let selectedPayment = "upi";
+      let totalAmount = 1464;
+
+      function selectAddress(element) {
+        document.querySelectorAll(".address-option").forEach((el) => {
+          el.classList.remove("selected");
+          el.querySelector(".radio-circle").innerHTML = "";
+        });
+        element.classList.add("selected");
+        element.querySelector(".radio-circle").innerHTML =
+          '<i class="fas fa-check"></i>';
+      }
+
+      function selectSlot(element) {
+        document.querySelectorAll(".delivery-slot").forEach((el) => {
+          el.classList.remove("selected");
+          el.querySelector(".radio-circle").innerHTML = "";
+        });
+        element.classList.add("selected");
+        element.querySelector(".radio-circle").innerHTML =
+          '<i class="fas fa-check"></i>';
+      }
+
+      function selectPayment(method, element) {
+        selectedPayment = method;
+
+        document
+          .querySelectorAll(".payment-option")
+          .forEach((el) => el.classList.remove("selected"));
+        element.classList.add("selected");
+
+        // Show/hide UPI apps
+        document.getElementById("upiApps").style.display =
+          method === "upi" ? "grid" : "none";
+
+        // Show/hide saved card
+        document.getElementById("savedCard").style.display =
+          method === "card" ? "flex" : "none";
+
+        // Update button
+        updatePayButton();
+      }
+
+      function updatePayButton() {
+        const btn = document.getElementById("payBtn");
+        if (selectedPayment === "cash") {
+          btn.innerHTML =
+            '<span>Place Order</span><i class="fas fa-check"></i>';
+        } else {
+          btn.innerHTML = `<span>Pay ₹${totalAmount}</span><i class="fas fa-lock"></i>`;
+        }
+      }
+
+      function payWithUPI(app) {
+        // Deep link to UPI apps
+        const upiId = "freshcart@upi";
+        const amount = totalAmount;
+        const transactionNote = "FreshCart Order";
+
+        const upiLinks = {
+          gpay: `tez://upi/pay?pa=${upiId}&pn=FreshCart&am=${amount}&tn=${transactionNote}`,
+          phonepe: `phonepe://pay?pa=${upiId}&pn=FreshCart&am=${amount}&tn=${transactionNote}`,
+          paytm: `paytmmp://upi/pay?pa=${upiId}&pn=FreshCart&am=${amount}&tn=${transactionNote}`,
+          other: `upi://pay?pa=${upiId}&pn=FreshCart&am=${amount}&tn=${transactionNote}`,
+        };
+
+        window.location.href = upiLinks[app];
+
+        // Poll for payment status
+        setTimeout(() => {
+          checkPaymentStatus();
+        }, 5000);
+      }
+
+      function checkPaymentStatus() {
+        // In production: Poll Django backend for payment status
+        console.log("Checking payment status...");
+      }
+
+      function applyCoupon() {
+        const code = document.getElementById("couponInput").value;
+        if (code.toUpperCase() === "FRESH50") {
+          document.getElementById("couponSection").style.display = "none";
+          document.getElementById("appliedCoupon").style.display = "flex";
+          document.getElementById("discountRow").style.display = "flex";
+          totalAmount -= 50;
+          updateTotals();
+          showToast("Coupon applied successfully!");
+        } else {
+          showToast("Invalid coupon code");
+        }
+      }
+
+      function removeCoupon() {
+        document.getElementById("couponSection").style.display = "flex";
+        document.getElementById("appliedCoupon").style.display = "none";
+        document.getElementById("discountRow").style.display = "none";
+        totalAmount += 50;
+        updateTotals();
+      }
+
+      function updateTotals() {
+        document.getElementById("totalAmount").textContent = "₹" + totalAmount;
+        document.getElementById("bottomTotal").textContent = "₹" + totalAmount;
+        updatePayButton();
+      }
+
+      function processPayment() {
+        document.getElementById("loadingOverlay").classList.add("active");
+
+        // Simulate payment processing
+        setTimeout(() => {
+          document.getElementById("loadingOverlay").classList.remove("active");
+
+          const orderId =
+            "FC-" +
+            new Date().getFullYear() +
+            "-" +
+            Math.floor(100000 + Math.random() * 900000);
+          document.getElementById("successOrderId").textContent = "#" + orderId;
+
+          document.getElementById("modalOverlay").classList.add("active");
+          document.getElementById("successModal").classList.add("active");
+
+          // Send to Django backend
+          const orderData = {
+            user_id: localStorage.getItem("userId"),
+            items: [
+              { id: 1, qty: 2 },
+              { id: 2, qty: 1 },
+            ],
+            total: totalAmount,
+            payment_method: selectedPayment,
+            address_id: 1,
+            delivery_slot: "express",
+          };
+
+          console.log("Customer Order:", orderData);
+        }, 2000);
+      }
+
+      function trackOrder() {
+        window.location.href = "orders.html";
+      }
+
+      function addAddress() {
+        showToast("Add address form");
+      }
+
+      function changeCard() {
+        showToast("Change card");
+      }
+
+      function goBack() {
+        window.history.back();
+      }
+
+      function showToast(message) {
+        const toast = document.createElement("div");
+        toast.className = "toast";
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.classList.add("show"), 10);
+        setTimeout(() => {
+          toast.classList.remove("show");
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+      }
+    </script>
+  </body>
+</html>

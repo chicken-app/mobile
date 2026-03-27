@@ -1,0 +1,2343 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nexus Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+            colors: {
+              primary: {
+                50: "#eff6ff",
+                100: "#dbeafe",
+                500: "#3b82f6",
+                600: "#2563eb",
+                700: "#1d4ed8",
+                900: "#1e3a8a",
+              },
+              dark: {
+                bg: "#0f172a",
+                card: "#1e293b",
+                border: "#334155",
+                text: "#f8fafc",
+                muted: "#94a3b8",
+              },
+            },
+            animation: {
+              "fade-in": "fadeIn 0.3s ease-in-out",
+              "slide-in": "slideIn 0.4s ease-out",
+              "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+            },
+            keyframes: {
+              fadeIn: {
+                "0%": { opacity: "0" },
+                "100%": { opacity: "1" },
+              },
+              slideIn: {
+                "0%": { transform: "translateX(-20px)", opacity: "0" },
+                "100%": { transform: "translateX(0)", opacity: "1" },
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background: #475569;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+
+      /* Glassmorphism */
+      .glass {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+      .dark .glass {
+        background: rgba(30, 41, 59, 0.7);
+      }
+
+      /* Smooth transitions */
+      .transition-all-300 {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      /* Custom checkbox */
+      .custom-checkbox:checked + div {
+        background-color: #3b82f6;
+        border-color: #3b82f6;
+      }
+      .custom-checkbox:checked + div svg {
+        display: block;
+      }
+
+      /* QR Code pattern */
+      .qr-pattern {
+        background-image:
+          repeating-linear-gradient(
+            0deg,
+            #000 0,
+            #000 20%,
+            transparent 20%,
+            transparent 40%
+          ),
+          repeating-linear-gradient(
+            90deg,
+            #000 0,
+            #000 20%,
+            transparent 20%,
+            transparent 40%
+          );
+        background-size: 20px 20px;
+      }
+
+      /* Bento Grid */
+      .bento-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+      }
+
+      @media (min-width: 1024px) {
+        .bento-grid {
+          grid-template-columns: repeat(4, 1fr);
+          grid-template-rows: auto;
+        }
+        .bento-item-large {
+          grid-column: span 2;
+        }
+        .bento-item-full {
+          grid-column: span 4;
+        }
+      }
+
+      /* Liquid Glass Effect */
+      .liquid-glass {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.1) 0%,
+          rgba(255, 255, 255, 0.05) 100%
+        );
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+      }
+
+      /* Toggle Switch */
+      .toggle-checkbox:checked {
+        right: 0;
+        border-color: #3b82f6;
+      }
+      .toggle-checkbox:checked + .toggle-label {
+        background-color: #3b82f6;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gray-50 text-gray-900 dark:bg-dark-bg dark:text-dark-text transition-colors duration-300 font-sans antialiased overflow-x-hidden"
+  >
+    <!-- Sidebar -->
+    <aside
+      id="sidebar"
+      class="fixed left-0 top-0 h-full w-64 bg-white dark:bg-dark-card border-r border-gray-200 dark:border-dark-border transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-50 flex flex-col"
+    >
+      <!-- Logo -->
+      <div
+        class="p-6 border-b border-gray-200 dark:border-dark-border flex items-center justify-between"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg"
+          >
+            N
+          </div>
+          <div>
+            <h1 class="font-bold text-xl tracking-tight">Nexus</h1>
+            <p class="text-xs text-gray-500 dark:text-dark-muted">
+              Admin Portal
+            </p>
+          </div>
+        </div>
+        <button
+          onclick="toggleSidebar()"
+          class="lg:hidden text-gray-500 hover:text-gray-700 dark:text-dark-muted dark:hover:text-white"
+        >
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-2">
+        <div
+          class="text-xs font-semibold text-gray-400 dark:text-dark-muted uppercase tracking-wider mb-4 px-2"
+        >
+          Main
+        </div>
+
+        <button
+          onclick="switchSection('dashboard')"
+          class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium transition-all-300 hover:scale-[1.02] group"
+        >
+          <i
+            class="fas fa-chart-pie w-5 group-hover:rotate-12 transition-transform"
+          ></i>
+          <span>Dashboard</span>
+        </button>
+
+        <button
+          onclick="switchSection('inventory')"
+          class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-dark-muted hover:bg-gray-100 dark:hover:bg-dark-border font-medium transition-all-300 hover:scale-[1.02] group"
+        >
+          <i
+            class="fas fa-boxes w-5 group-hover:rotate-12 transition-transform"
+          ></i>
+          <span>Inventory</span>
+          <span
+            class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full"
+            >12</span
+          >
+        </button>
+
+        <button
+          onclick="switchSection('orders')"
+          class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-dark-muted hover:bg-gray-100 dark:hover:bg-dark-border font-medium transition-all-300 hover:scale-[1.02] group"
+        >
+          <i
+            class="fas fa-shopping-cart w-5 group-hover:rotate-12 transition-transform"
+          ></i>
+          <span>Orders</span>
+        </button>
+
+        <button
+          onclick="switchSection('staff')"
+          class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-dark-muted hover:bg-gray-100 dark:hover:bg-dark-border font-medium transition-all-300 hover:scale-[1.02] group"
+        >
+          <i
+            class="fas fa-users w-5 group-hover:rotate-12 transition-transform"
+          ></i>
+          <span>Staff Management</span>
+        </button>
+
+        <button
+          onclick="switchSection('finance')"
+          class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-dark-muted hover:bg-gray-100 dark:hover:bg-dark-border font-medium transition-all-300 hover:scale-[1.02] group"
+        >
+          <i
+            class="fas fa-wallet w-5 group-hover:rotate-12 transition-transform"
+          ></i>
+          <span>Finance</span>
+        </button>
+
+        <div
+          class="text-xs font-semibold text-gray-400 dark:text-dark-muted uppercase tracking-wider mt-8 mb-4 px-2"
+        >
+          Settings
+        </div>
+
+        <button
+          onclick="switchSection('payments')"
+          class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-dark-muted hover:bg-gray-100 dark:hover:bg-dark-border font-medium transition-all-300 hover:scale-[1.02] group"
+        >
+          <i
+            class="fas fa-credit-card w-5 group-hover:rotate-12 transition-transform"
+          ></i>
+          <span>Payment Setup</span>
+        </button>
+
+        <button
+          onclick="toggleTheme()"
+          class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-dark-muted hover:bg-gray-100 dark:hover:bg-dark-border font-medium transition-all-300 hover:scale-[1.02] group"
+        >
+          <i
+            class="fas fa-moon w-5 group-hover:rotate-12 transition-transform dark:hidden"
+          ></i>
+          <i
+            class="fas fa-sun w-5 group-hover:rotate-12 transition-transform hidden dark:block"
+          ></i>
+          <span id="theme-text">Dark Mode</span>
+        </button>
+      </nav>
+
+      <!-- User Profile -->
+      <div class="p-4 border-t border-gray-200 dark:border-dark-border">
+        <div
+          class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-dark-border/50 cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-border transition-colors"
+        >
+          <img
+            src="https://ui-avatars.com/api/?name=Admin+User&background=3b82f6&color=fff"
+            alt="Admin"
+            class="w-10 h-10 rounded-full border-2 border-white dark:border-dark-card"
+          />
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold truncate">Super Admin</p>
+            <p class="text-xs text-gray-500 dark:text-dark-muted truncate">
+              admin@nexus.com
+            </p>
+          </div>
+          <i class="fas fa-ellipsis-vertical text-gray-400"></i>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-64 min-h-screen transition-all duration-300">
+      <!-- Top Header -->
+      <header
+        class="sticky top-0 z-40 glass border-b border-gray-200 dark:border-dark-border px-6 py-4 flex items-center justify-between"
+      >
+        <div class="flex items-center gap-4">
+          <button
+            onclick="toggleSidebar()"
+            class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-border text-gray-600 dark:text-dark-muted"
+          >
+            <i class="fas fa-bars text-xl"></i>
+          </button>
+          <div class="relative">
+            <i
+              class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            ></i>
+            <input
+              type="text"
+              placeholder="Search anything..."
+              class="pl-10 pr-4 py-2 rounded-xl bg-gray-100 dark:bg-dark-border border-none focus:ring-2 focus:ring-blue-500 w-64 md:w-96 text-sm transition-all-300 focus:w-[28rem]"
+            />
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <button
+            class="relative p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-dark-border text-gray-600 dark:text-dark-muted transition-colors"
+          >
+            <i class="fas fa-bell text-xl"></i>
+            <span
+              class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"
+            ></span>
+          </button>
+          <button
+            class="relative p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-dark-border text-gray-600 dark:text-dark-muted transition-colors"
+          >
+            <i class="fas fa-envelope text-xl"></i>
+            <span
+              class="absolute -top-1 -right-1 bg-blue-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full"
+              >3</span
+            >
+          </button>
+          <div
+            class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm font-medium"
+          >
+            <span
+              class="w-2 h-2 bg-green-500 rounded-full animate-pulse"
+            ></span>
+            System Online
+          </div>
+        </div>
+      </header>
+
+      <!-- Content Container -->
+      <div class="p-6 max-w-7xl mx-auto space-y-6">
+        <!-- Dashboard Overview Section -->
+        <section id="section-dashboard" class="section-content animate-fade-in">
+          <div class="mb-6">
+            <h2 class="text-2xl font-bold mb-1">Dashboard Overview</h2>
+            <p class="text-gray-500 dark:text-dark-muted">
+              Welcome back! Here's what's happening today.
+            </p>
+          </div>
+
+          <!-- KPI Cards -->
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6"
+          >
+            <div
+              class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border hover:shadow-lg transition-all-300 hover:-translate-y-1 group"
+            >
+              <div class="flex justify-between items-start mb-4">
+                <div
+                  class="p-3 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform"
+                >
+                  <i class="fas fa-dollar-sign text-xl"></i>
+                </div>
+                <span
+                  class="text-xs font-medium text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full"
+                  >+12.5%</span
+                >
+              </div>
+              <p class="text-gray-500 dark:text-dark-muted text-sm">
+                Total Revenue
+              </p>
+              <h3 class="text-2xl font-bold mt-1">₹2,45,890</h3>
+              <p class="text-xs text-gray-400 mt-2">vs last month</p>
+            </div>
+
+            <div
+              class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border hover:shadow-lg transition-all-300 hover:-translate-y-1 group"
+            >
+              <div class="flex justify-between items-start mb-4">
+                <div
+                  class="p-3 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform"
+                >
+                  <i class="fas fa-shopping-bag text-xl"></i>
+                </div>
+                <span
+                  class="text-xs font-medium text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full"
+                  >+8.2%</span
+                >
+              </div>
+              <p class="text-gray-500 dark:text-dark-muted text-sm">
+                Active Orders
+              </p>
+              <h3 class="text-2xl font-bold mt-1">1,234</h3>
+              <p class="text-xs text-gray-400 mt-2">32 pending</p>
+            </div>
+
+            <div
+              class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border hover:shadow-lg transition-all-300 hover:-translate-y-1 group"
+            >
+              <div class="flex justify-between items-start mb-4">
+                <div
+                  class="p-3 rounded-xl bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform"
+                >
+                  <i class="fas fa-box text-xl"></i>
+                </div>
+                <span
+                  class="text-xs font-medium text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-2 py-1 rounded-full"
+                  >-2.4%</span
+                >
+              </div>
+              <p class="text-gray-500 dark:text-dark-muted text-sm">
+                Low Stock Items
+              </p>
+              <h3 class="text-2xl font-bold mt-1">23</h3>
+              <p class="text-xs text-gray-400 mt-2">Need attention</p>
+            </div>
+
+            <div
+              class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border hover:shadow-lg transition-all-300 hover:-translate-y-1 group"
+            >
+              <div class="flex justify-between items-start mb-4">
+                <div
+                  class="p-3 rounded-xl bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 group-hover:scale-110 transition-transform"
+                >
+                  <i class="fas fa-users text-xl"></i>
+                </div>
+                <span
+                  class="text-xs font-medium text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full"
+                  >+5.7%</span
+                >
+              </div>
+              <p class="text-gray-500 dark:text-dark-muted text-sm">
+                Total Staff
+              </p>
+              <h3 class="text-2xl font-bold mt-1">48</h3>
+              <p class="text-xs text-gray-400 mt-2">6 on leave</p>
+            </div>
+          </div>
+
+          <!-- Charts Section -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div
+              class="lg:col-span-2 bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border"
+            >
+              <div class="flex justify-between items-center mb-6">
+                <h3 class="font-bold text-lg">Revenue Analytics</h3>
+                <select
+                  class="text-sm border border-gray-200 dark:border-dark-border rounded-lg px-3 py-1 bg-transparent"
+                >
+                  <option>Last 7 Days</option>
+                  <option>Last 30 Days</option>
+                  <option>This Year</option>
+                </select>
+              </div>
+              <canvas id="revenueChart" height="250"></canvas>
+            </div>
+
+            <div
+              class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border"
+            >
+              <h3 class="font-bold text-lg mb-6">Order Status</h3>
+              <canvas id="orderChart" height="250"></canvas>
+              <div class="mt-4 space-y-3">
+                <div class="flex justify-between items-center text-sm">
+                  <span class="flex items-center gap-2"
+                    ><span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                    Active</span
+                  >
+                  <span class="font-semibold">65%</span>
+                </div>
+                <div class="flex justify-between items-center text-sm">
+                  <span class="flex items-center gap-2"
+                    ><span class="w-3 h-3 rounded-full bg-green-500"></span>
+                    Completed</span
+                  >
+                  <span class="font-semibold">25%</span>
+                </div>
+                <div class="flex justify-between items-center text-sm">
+                  <span class="flex items-center gap-2"
+                    ><span class="w-3 h-3 rounded-full bg-red-500"></span>
+                    Cancelled</span
+                  >
+                  <span class="font-semibold">10%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Activity -->
+          <div
+            class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border"
+          >
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="font-bold text-lg">Recent Activity</h3>
+              <button
+                class="text-blue-600 dark:text-blue-400 text-sm font-medium hover:underline"
+              >
+                View All
+              </button>
+            </div>
+            <div class="space-y-4">
+              <div
+                class="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-dark-border/50 transition-colors cursor-pointer group"
+              >
+                <div
+                  class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform"
+                >
+                  <i class="fas fa-plus"></i>
+                </div>
+                <div class="flex-1">
+                  <p class="font-medium">New order #ORD-7842 received</p>
+                  <p class="text-sm text-gray-500 dark:text-dark-muted">
+                    2 minutes ago • ₹12,450
+                  </p>
+                </div>
+                <span
+                  class="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
+                  >Pending</span
+                >
+              </div>
+
+              <div
+                class="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-dark-border/50 transition-colors cursor-pointer group"
+              >
+                <div
+                  class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 group-hover:scale-110 transition-transform"
+                >
+                  <i class="fas fa-check"></i>
+                </div>
+                <div class="flex-1">
+                  <p class="font-medium">Payment received via UPI</p>
+                  <p class="text-sm text-gray-500 dark:text-dark-muted">
+                    15 minutes ago • ₹8,900
+                  </p>
+                </div>
+                <span
+                  class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                  >Success</span
+                >
+              </div>
+
+              <div
+                class="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-dark-border/50 transition-colors cursor-pointer group"
+              >
+                <div
+                  class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 group-hover:scale-110 transition-transform"
+                >
+                  <i class="fas fa-exclamation"></i>
+                </div>
+                <div class="flex-1">
+                  <p class="font-medium">Low stock alert: Wireless Mouse</p>
+                  <p class="text-sm text-gray-500 dark:text-dark-muted">
+                    1 hour ago • Only 3 left
+                  </p>
+                </div>
+                <span
+                  class="px-3 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                  >Alert</span
+                >
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Inventory Management Section -->
+        <section
+          id="section-inventory"
+          class="section-content hidden animate-fade-in"
+        >
+          <div class="flex justify-between items-center mb-6">
+            <div>
+              <h2 class="text-2xl font-bold mb-1">Inventory Management</h2>
+              <p class="text-gray-500 dark:text-dark-muted">
+                Manage products, quantities, and pricing
+              </p>
+            </div>
+            <button
+              onclick="openModal('addProductModal')"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all hover:-translate-y-0.5"
+            >
+              <i class="fas fa-plus"></i>
+              Add Product
+            </button>
+          </div>
+
+          <!-- Inventory Stats -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div
+              class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-500/30"
+            >
+              <p class="text-blue-100 text-sm mb-1">Total Products</p>
+              <h3 class="text-3xl font-bold">1,247</h3>
+              <p class="text-blue-200 text-xs mt-2">+15 this week</p>
+            </div>
+            <div
+              class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border"
+            >
+              <p class="text-gray-500 dark:text-dark-muted text-sm mb-1">
+                Categories
+              </p>
+              <h3 class="text-3xl font-bold text-gray-900 dark:text-white">
+                24
+              </h3>
+            </div>
+            <div
+              class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border"
+            >
+              <p class="text-gray-500 dark:text-dark-muted text-sm mb-1">
+                Out of Stock
+              </p>
+              <h3 class="text-3xl font-bold text-red-600">8</h3>
+            </div>
+            <div
+              class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border"
+            >
+              <p class="text-gray-500 dark:text-dark-muted text-sm mb-1">
+                Inventory Value
+              </p>
+              <h3 class="text-3xl font-bold text-green-600">₹12.4L</h3>
+            </div>
+          </div>
+
+          <!-- Inventory Table -->
+          <div
+            class="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border overflow-hidden"
+          >
+            <div
+              class="p-6 border-b border-gray-200 dark:border-dark-border flex flex-col md:flex-row gap-4 justify-between"
+            >
+              <div class="relative flex-1 max-w-md">
+                <i
+                  class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                ></i>
+                <input
+                  type="text"
+                  id="inventorySearch"
+                  placeholder="Search products..."
+                  class="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg focus:ring-2 focus:ring-blue-500 outline-none"
+                  onkeyup="filterInventory()"
+                />
+              </div>
+              <div class="flex gap-3">
+                <select
+                  class="px-4 py-2 rounded-xl border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg text-sm"
+                >
+                  <option>All Categories</option>
+                  <option>Electronics</option>
+                  <option>Clothing</option>
+                  <option>Accessories</option>
+                </select>
+                <button
+                  class="px-4 py-2 rounded-xl border border-gray-200 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-border text-sm font-medium"
+                >
+                  <i class="fas fa-filter mr-2"></i>Filter
+                </button>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50 dark:bg-dark-border/50">
+                  <tr>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase tracking-wider"
+                    >
+                      Product
+                    </th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase tracking-wider"
+                    >
+                      SKU
+                    </th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase tracking-wider"
+                    >
+                      Quantity
+                    </th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase tracking-wider"
+                    >
+                      Price
+                    </th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase tracking-wider"
+                    >
+                      Bulk Price
+                    </th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase tracking-wider"
+                    >
+                      Discount
+                    </th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase tracking-wider"
+                    >
+                      Status
+                    </th>
+                    <th
+                      class="px-6 py-4 text-right text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase tracking-wider"
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  id="inventoryTableBody"
+                  class="divide-y divide-gray-200 dark:divide-dark-border"
+                >
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <div
+              class="p-4 border-t border-gray-200 dark:border-dark-border flex justify-between items-center"
+            >
+              <p class="text-sm text-gray-500 dark:text-dark-muted">
+                Showing 1-10 of 1,247 products
+              </p>
+              <div class="flex gap-2">
+                <button
+                  class="px-3 py-1 rounded-lg border border-gray-200 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-border text-sm disabled:opacity-50"
+                  disabled
+                >
+                  Previous
+                </button>
+                <button
+                  class="px-3 py-1 rounded-lg border border-gray-200 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-border text-sm"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Orders Section -->
+        <section
+          id="section-orders"
+          class="section-content hidden animate-fade-in"
+        >
+          <div class="flex justify-between items-center mb-6">
+            <div>
+              <h2 class="text-2xl font-bold mb-1">Order Tracking</h2>
+              <p class="text-gray-500 dark:text-dark-muted">
+                Monitor and manage customer orders
+              </p>
+            </div>
+            <div class="flex gap-3">
+              <button
+                class="px-4 py-2 rounded-xl border border-gray-200 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-border text-sm font-medium"
+              >
+                <i class="fas fa-download mr-2"></i>Export
+              </button>
+              <button
+                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-medium shadow-lg shadow-blue-500/30 transition-all"
+              >
+                New Order
+              </button>
+            </div>
+          </div>
+
+          <!-- Order Stats -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+            <div
+              class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border border-l-4 border-l-blue-500"
+            >
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-gray-500 dark:text-dark-muted text-sm"
+                  >Active</span
+                >
+                <span
+                  class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"
+                ></span>
+              </div>
+              <h3 class="text-3xl font-bold">156</h3>
+              <p class="text-xs text-gray-400 mt-1">Processing</p>
+            </div>
+
+            <div
+              class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border border-l-4 border-l-yellow-500"
+            >
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-gray-500 dark:text-dark-muted text-sm"
+                  >Pending</span
+                >
+                <i class="fas fa-clock text-yellow-500"></i>
+              </div>
+              <h3 class="text-3xl font-bold">42</h3>
+              <p class="text-xs text-gray-400 mt-1">Awaiting payment</p>
+            </div>
+
+            <div
+              class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border border-l-4 border-l-green-500"
+            >
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-gray-500 dark:text-dark-muted text-sm"
+                  >Completed</span
+                >
+                <i class="fas fa-check-circle text-green-500"></i>
+              </div>
+              <h3 class="text-3xl font-bold">1,089</h3>
+              <p class="text-xs text-gray-400 mt-1">This month</p>
+            </div>
+
+            <div
+              class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border border-l-4 border-l-red-500"
+            >
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-gray-500 dark:text-dark-muted text-sm"
+                  >Cancelled</span
+                >
+                <i class="fas fa-times-circle text-red-500"></i>
+              </div>
+              <h3 class="text-3xl font-bold">23</h3>
+              <p class="text-xs text-gray-400 mt-1">2.1% rate</p>
+            </div>
+          </div>
+
+          <!-- Orders List -->
+          <div
+            class="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border"
+          >
+            <div class="p-6 border-b border-gray-200 dark:border-dark-border">
+              <div class="flex gap-2 overflow-x-auto pb-2">
+                <button
+                  class="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-medium whitespace-nowrap"
+                >
+                  All Orders
+                </button>
+                <button
+                  class="px-4 py-2 rounded-full bg-gray-100 dark:bg-dark-border text-gray-600 dark:text-dark-muted text-sm font-medium whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-700"
+                >
+                  Active
+                </button>
+                <button
+                  class="px-4 py-2 rounded-full bg-gray-100 dark:bg-dark-border text-gray-600 dark:text-dark-muted text-sm font-medium whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-700"
+                >
+                  Completed
+                </button>
+                <button
+                  class="px-4 py-2 rounded-full bg-gray-100 dark:bg-dark-border text-gray-600 dark:text-dark-muted text-sm font-medium whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-700"
+                >
+                  Cancelled
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="divide-y divide-gray-200 dark:divide-dark-border"
+              id="ordersList"
+            >
+              <!-- Order items populated by JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Staff Management Section -->
+        <section
+          id="section-staff"
+          class="section-content hidden animate-fade-in"
+        >
+          <div class="flex justify-between items-center mb-6">
+            <div>
+              <h2 class="text-2xl font-bold mb-1">Staff Management</h2>
+              <p class="text-gray-500 dark:text-dark-muted">
+                Manage team members and permissions
+              </p>
+            </div>
+            <button
+              onclick="openModal('addStaffModal')"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all hover:-translate-y-0.5"
+            >
+              <i class="fas fa-user-plus"></i>
+              Add Staff
+            </button>
+          </div>
+
+          <!-- Team Grid -->
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            id="staffGrid"
+          >
+            <!-- Staff cards populated by JS -->
+          </div>
+        </section>
+
+        <!-- Finance Section -->
+        <section
+          id="section-finance"
+          class="section-content hidden animate-fade-in"
+        >
+          <div class="flex justify-between items-center mb-6">
+            <div>
+              <h2 class="text-2xl font-bold mb-1">Financial Management</h2>
+              <p class="text-gray-500 dark:text-dark-muted">
+                Track cash flow and financial metrics
+              </p>
+            </div>
+            <button
+              class="px-4 py-2 rounded-xl border border-gray-200 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-border text-sm font-medium"
+            >
+              <i class="fas fa-file-pdf mr-2"></i>Generate Report
+            </button>
+          </div>
+
+          <!-- Financial Overview -->
+          <div class="bento-grid mb-6">
+            <div
+              class="bento-item-large bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border"
+            >
+              <h3 class="font-bold text-lg mb-4">Cash Flow Overview</h3>
+              <canvas id="cashFlowChart" height="200"></canvas>
+            </div>
+
+            <div
+              class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border"
+            >
+              <h3 class="font-bold text-lg mb-4">Income Breakdown</h3>
+              <div class="space-y-4">
+                <div>
+                  <div class="flex justify-between text-sm mb-1">
+                    <span class="text-gray-600 dark:text-dark-muted"
+                      >Product Sales</span
+                    >
+                    <span class="font-semibold">68%</span>
+                  </div>
+                  <div
+                    class="w-full bg-gray-200 dark:bg-dark-border rounded-full h-2"
+                  >
+                    <div
+                      class="bg-blue-500 h-2 rounded-full"
+                      style="width: 68%"
+                    ></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-sm mb-1">
+                    <span class="text-gray-600 dark:text-dark-muted"
+                      >Services</span
+                    >
+                    <span class="font-semibold">24%</span>
+                  </div>
+                  <div
+                    class="w-full bg-gray-200 dark:bg-dark-border rounded-full h-2"
+                  >
+                    <div
+                      class="bg-purple-500 h-2 rounded-full"
+                      style="width: 24%"
+                    ></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-sm mb-1">
+                    <span class="text-gray-600 dark:text-dark-muted"
+                      >Other</span
+                    >
+                    <span class="font-semibold">8%</span>
+                  </div>
+                  <div
+                    class="w-full bg-gray-200 dark:bg-dark-border rounded-full h-2"
+                  >
+                    <div
+                      class="bg-green-500 h-2 rounded-full"
+                      style="width: 8%"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-6 text-white shadow-lg shadow-green-500/30"
+            >
+              <p class="text-green-100 text-sm mb-2">Net Profit (MTD)</p>
+              <h3 class="text-3xl font-bold mb-1">₹1,24,500</h3>
+              <p class="text-green-200 text-sm">+18.2% from last month</p>
+              <div class="mt-4 flex items-center gap-2 text-sm text-green-100">
+                <i class="fas fa-arrow-trend-up"></i>
+                <span>On track to exceed target</span>
+              </div>
+            </div>
+
+            <div
+              class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border"
+            >
+              <p class="text-gray-500 dark:text-dark-muted text-sm mb-1">
+                Total Expenses
+              </p>
+              <h3 class="text-2xl font-bold text-red-600 mb-3">₹45,230</h3>
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-gray-600 dark:text-dark-muted"
+                    >Inventory</span
+                  >
+                  <span class="font-medium">₹28,000</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600 dark:text-dark-muted"
+                    >Salaries</span
+                  >
+                  <span class="font-medium">₹12,000</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600 dark:text-dark-muted"
+                    >Utilities</span
+                  >
+                  <span class="font-medium">₹5,230</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Transactions Table -->
+          <div
+            class="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border overflow-hidden"
+          >
+            <div class="p-6 border-b border-gray-200 dark:border-dark-border">
+              <h3 class="font-bold text-lg">Recent Transactions</h3>
+            </div>
+            <table class="w-full">
+              <thead class="bg-gray-50 dark:bg-dark-border/50">
+                <tr>
+                  <th
+                    class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase"
+                  >
+                    Transaction ID
+                  </th>
+                  <th
+                    class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase"
+                  >
+                    Date
+                  </th>
+                  <th
+                    class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase"
+                  >
+                    Description
+                  </th>
+                  <th
+                    class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase"
+                  >
+                    Category
+                  </th>
+                  <th
+                    class="px-6 py-4 text-right text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase"
+                  >
+                    Amount
+                  </th>
+                  <th
+                    class="px-6 py-4 text-center text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase"
+                  >
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                class="divide-y divide-gray-200 dark:divide-dark-border"
+                id="transactionTable"
+              >
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Payment Setup Section -->
+        <section
+          id="section-payments"
+          class="section-content hidden animate-fade-in"
+        >
+          <div class="mb-6">
+            <h2 class="text-2xl font-bold mb-1">Payment Configuration</h2>
+            <p class="text-gray-500 dark:text-dark-muted">
+              Manage UPI, QR codes, and payment methods
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- UPI Configuration -->
+            <div class="lg:col-span-2 space-y-6">
+              <div
+                class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border"
+              >
+                <div class="flex justify-between items-center mb-6">
+                  <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i class="fas fa-qrcode text-blue-600"></i>
+                    UPI Payment Setup
+                  </h3>
+                  <label
+                    class="relative inline-flex items-center cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      class="sr-only peer"
+                      checked
+                      onchange="togglePaymentMethod(this, 'upi')"
+                    />
+                    <div
+                      class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
+                    ></div>
+                  </label>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="space-y-4">
+                    <div>
+                      <label
+                        class="block text-sm font-medium text-gray-700 dark:text-dark-muted mb-2"
+                        >UPI ID</label
+                      >
+                      <div class="flex gap-2">
+                        <input
+                          type="text"
+                          id="upiId"
+                          value="business@upi"
+                          class="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg focus:ring-2 focus:ring-blue-500 outline-none"
+                        />
+                        <button
+                          onclick="saveUpiId()"
+                          class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                        >
+                          <i class="fas fa-save"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label
+                        class="block text-sm font-medium text-gray-700 dark:text-dark-muted mb-2"
+                        >Merchant Name</label
+                      >
+                      <input
+                        type="text"
+                        value="Nexus Enterprises"
+                        class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        class="block text-sm font-medium text-gray-700 dark:text-dark-muted mb-2"
+                        >Default Amount (Optional)</label
+                      >
+                      <input
+                        type="number"
+                        placeholder="Enter amount"
+                        class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div
+                    class="flex flex-col items-center justify-center bg-gray-50 dark:bg-dark-border/30 rounded-xl p-6"
+                  >
+                    <div
+                      id="qrCode"
+                      class="w-48 h-48 bg-white rounded-xl p-4 shadow-inner mb-4 relative overflow-hidden group cursor-pointer"
+                      onclick="downloadQR()"
+                    >
+                      <!-- Simulated QR Code -->
+                      <div class="w-full h-full relative">
+                        <div
+                          class="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg qr-pattern opacity-90"
+                        ></div>
+                        <div
+                          class="absolute inset-0 flex items-center justify-center"
+                        >
+                          <div class="bg-white p-2 rounded-lg">
+                            <i class="fas fa-upi text-2xl text-blue-600"></i>
+                          </div>
+                        </div>
+                        <div
+                          class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center"
+                        >
+                          <span
+                            class="opacity-0 group-hover:opacity-100 text-white text-xs font-medium bg-black/50 px-3 py-1 rounded-full transition-opacity"
+                          >
+                            Click to download
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <p
+                      class="text-sm text-gray-500 dark:text-dark-muted text-center"
+                    >
+                      Scan to pay via any UPI app
+                    </p>
+                    <button
+                      onclick="regenerateQR()"
+                      class="mt-3 text-blue-600 dark:text-blue-400 text-sm font-medium hover:underline flex items-center gap-1"
+                    >
+                      <i class="fas fa-refresh"></i>
+                      Regenerate QR
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Other Payment Methods -->
+              <div
+                class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border"
+              >
+                <h3 class="font-bold text-lg mb-6">
+                  Additional Payment Methods
+                </h3>
+                <div class="space-y-4">
+                  <div
+                    class="flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-dark-border hover:border-blue-500 dark:hover:border-blue-500 transition-colors cursor-pointer group"
+                  >
+                    <div class="flex items-center gap-4">
+                      <div
+                        class="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 group-hover:scale-110 transition-transform"
+                      >
+                        <i class="fas fa-money-bill-wave text-xl"></i>
+                      </div>
+                      <div>
+                        <p class="font-semibold">Cash on Delivery</p>
+                        <p class="text-sm text-gray-500 dark:text-dark-muted">
+                          Accept cash payments
+                        </p>
+                      </div>
+                    </div>
+                    <label
+                      class="relative inline-flex items-center cursor-pointer"
+                    >
+                      <input type="checkbox" class="sr-only peer" checked />
+                      <div
+                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"
+                      ></div>
+                    </label>
+                  </div>
+
+                  <div
+                    class="flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-dark-border hover:border-blue-500 dark:hover:border-blue-500 transition-colors cursor-pointer group"
+                  >
+                    <div class="flex items-center gap-4">
+                      <div
+                        class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform"
+                      >
+                        <i class="fas fa-credit-card text-xl"></i>
+                      </div>
+                      <div>
+                        <p class="font-semibold">Card Payments</p>
+                        <p class="text-sm text-gray-500 dark:text-dark-muted">
+                          Credit/Debit cards
+                        </p>
+                      </div>
+                    </div>
+                    <label
+                      class="relative inline-flex items-center cursor-pointer"
+                    >
+                      <input type="checkbox" class="sr-only-peer" disabled />
+                      <div
+                        class="w-11 h-6 bg-gray-200 rounded-full dark:bg-gray-700 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all opacity-50 cursor-not-allowed"
+                      ></div>
+                    </label>
+                  </div>
+
+                  <div
+                    class="flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-dark-border hover:border-blue-500 dark:hover:border-blue-500 transition-colors cursor-pointer group opacity-60"
+                  >
+                    <div class="flex items-center gap-4">
+                      <div
+                        class="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform"
+                      >
+                        <i class="fas fa-wallet text-xl"></i>
+                      </div>
+                      <div>
+                        <p class="font-semibold">Digital Wallets</p>
+                        <p class="text-sm text-gray-500 dark:text-dark-muted">
+                          Paytm, PhonePe, etc.
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      class="px-3 py-1 rounded-full bg-gray-100 dark:bg-dark-border text-xs font-medium text-gray-500"
+                      >Coming Soon</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Payment Stats -->
+            <div class="space-y-6">
+              <div
+                class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border"
+              >
+                <h3 class="font-bold text-lg mb-4">Payment Analytics</h3>
+                <canvas id="paymentChart" height="200"></canvas>
+              </div>
+
+              <div
+                class="bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl p-6 text-white shadow-lg shadow-purple-500/30"
+              >
+                <h4 class="font-semibold mb-2">Pro Tip</h4>
+                <p class="text-sm text-purple-100 mb-4">
+                  Keep your UPI ID short and memorable for better customer
+                  experience.
+                </p>
+                <button
+                  class="w-full py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors backdrop-blur-sm"
+                >
+                  View Best Practices
+                </button>
+              </div>
+
+              <div
+                class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border"
+              >
+                <h4 class="font-semibold mb-4">Today's Collection</h4>
+                <div class="space-y-3">
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-600 dark:text-dark-muted text-sm"
+                      >UPI Payments</span
+                    >
+                    <span class="font-semibold">₹24,500</span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-600 dark:text-dark-muted text-sm"
+                      >Cash</span
+                    >
+                    <span class="font-semibold">₹8,200</span>
+                  </div>
+                  <div
+                    class="border-t border-gray-200 dark:border-dark-border pt-3 flex justify-between items-center"
+                  >
+                    <span class="font-medium">Total</span>
+                    <span class="font-bold text-lg text-blue-600">₹32,700</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Add Product Modal -->
+    <div id="addProductModal" class="fixed inset-0 z-50 hidden">
+      <div
+        class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onclick="closeModal('addProductModal')"
+      ></div>
+      <div class="absolute inset-0 flex items-center justify-center p-4">
+        <div
+          class="bg-white dark:bg-dark-card rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slide-in"
+        >
+          <div
+            class="p-6 border-b border-gray-200 dark:border-dark-border flex justify-between items-center sticky top-0 bg-white dark:bg-dark-card z-10"
+          >
+            <h3 class="text-xl font-bold">Add New Product</h3>
+            <button
+              onclick="closeModal('addProductModal')"
+              class="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-dark-border flex items-center justify-center transition-colors"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="p-6 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium mb-2"
+                  >Product Name</label
+                >
+                <input
+                  type="text"
+                  class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="Enter product name"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">SKU</label>
+                <input
+                  type="text"
+                  class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="SKU-001"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">Category</label>
+                <select
+                  class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  <option>Select category</option>
+                  <option>Electronics</option>
+                  <option>Clothing</option>
+                  <option>Accessories</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">Quantity</label>
+                <input
+                  type="number"
+                  class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2"
+                  >Unit Price (₹)</label
+                >
+                <input
+                  type="number"
+                  class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2"
+                  >Bulk Price (₹)</label
+                >
+                <input
+                  type="number"
+                  class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2"
+                  >Discount (%)</label
+                >
+                <input
+                  type="number"
+                  class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="0"
+                />
+              </div>
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium mb-2">Description</label>
+              <textarea
+                rows="3"
+                class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="Product description..."
+              ></textarea>
+            </div>
+          </div>
+          <div
+            class="p-6 border-t border-gray-200 dark:border-dark-border flex justify-end gap-3 sticky bottom-0 bg-white dark:bg-dark-card"
+          >
+            <button
+              onclick="closeModal('addProductModal')"
+              class="px-6 py-2 rounded-xl border border-gray-200 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-border font-medium transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onclick="saveProduct()"
+              class="px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-lg shadow-blue-500/30 transition-all"
+            >
+              Save Product
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Staff Modal -->
+    <div id="addStaffModal" class="fixed inset-0 z-50 hidden">
+      <div
+        class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onclick="closeModal('addStaffModal')"
+      ></div>
+      <div class="absolute inset-0 flex items-center justify-center p-4">
+        <div
+          class="bg-white dark:bg-dark-card rounded-2xl shadow-2xl w-full max-w-lg animate-slide-in"
+        >
+          <div
+            class="p-6 border-b border-gray-200 dark:border-dark-border flex justify-between items-center"
+          >
+            <h3 class="text-xl font-bold">Add New Staff</h3>
+            <button
+              onclick="closeModal('addStaffModal')"
+              class="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-dark-border flex items-center justify-center transition-colors"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="p-6 space-y-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">Full Name</label>
+              <input
+                type="text"
+                id="staffName"
+                class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="Enter name"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Email</label>
+              <input
+                type="email"
+                id="staffEmail"
+                class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="email@company.com"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Role</label>
+              <select
+                id="staffRole"
+                class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg focus:ring-2 focus:ring-blue-500 outline-none"
+              >
+                <option value="Manager">Manager</option>
+                <option value="Sales">Sales Staff</option>
+                <option value="Inventory">Inventory Staff</option>
+                <option value="Support">Support</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Department</label>
+              <select
+                id="staffDept"
+                class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg focus:ring-2 focus:ring-blue-500 outline-none"
+              >
+                <option value="Sales">Sales</option>
+                <option value="Operations">Operations</option>
+                <option value="Finance">Finance</option>
+                <option value="Support">Customer Support</option>
+              </select>
+            </div>
+          </div>
+          <div
+            class="p-6 border-t border-gray-200 dark:border-dark-border flex justify-end gap-3"
+          >
+            <button
+              onclick="closeModal('addStaffModal')"
+              class="px-6 py-2 rounded-xl border border-gray-200 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-border font-medium transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onclick="saveStaff()"
+              class="px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-lg shadow-blue-500/30 transition-all"
+            >
+              Add Staff
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div
+      id="toast"
+      class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 transition-all duration-300 z-50"
+    >
+      <div
+        class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3"
+      >
+        <i class="fas fa-check-circle text-green-400 dark:text-green-600"></i>
+        <span id="toastMessage" class="font-medium">Operation successful</span>
+      </div>
+    </div>
+
+    <script>
+      // Data Store
+      const store = {
+        inventory: [
+          {
+            id: 1,
+            name: "Wireless Mouse",
+            sku: "ELEC-001",
+            qty: 45,
+            price: 899,
+            bulkPrice: 799,
+            discount: 10,
+            status: "active",
+          },
+          {
+            id: 2,
+            name: "Mechanical Keyboard",
+            sku: "ELEC-002",
+            qty: 3,
+            price: 3499,
+            bulkPrice: 2999,
+            discount: 15,
+            status: "low",
+          },
+          {
+            id: 3,
+            name: "USB-C Cable",
+            sku: "ELEC-003",
+            qty: 120,
+            price: 299,
+            bulkPrice: 249,
+            discount: 5,
+            status: "active",
+          },
+          {
+            id: 4,
+            name: "Webcam HD",
+            sku: "ELEC-004",
+            qty: 0,
+            price: 2499,
+            bulkPrice: 2199,
+            discount: 12,
+            status: "out",
+          },
+          {
+            id: 5,
+            name: "Laptop Stand",
+            sku: "ACC-001",
+            qty: 28,
+            price: 1299,
+            bulkPrice: 1099,
+            discount: 8,
+            status: "active",
+          },
+          {
+            id: 6,
+            name: "Desk Lamp LED",
+            sku: "ACC-002",
+            qty: 15,
+            price: 899,
+            bulkPrice: 749,
+            discount: 10,
+            status: "active",
+          },
+        ],
+        orders: [
+          {
+            id: "ORD-7842",
+            customer: "Rahul Sharma",
+            date: "2026-03-27",
+            items: 3,
+            total: 12450,
+            status: "active",
+          },
+          {
+            id: "ORD-7841",
+            customer: "Priya Patel",
+            date: "2026-03-27",
+            items: 1,
+            total: 3499,
+            status: "completed",
+          },
+          {
+            id: "ORD-7840",
+            customer: "Amit Kumar",
+            date: "2026-03-26",
+            items: 5,
+            total: 28900,
+            status: "active",
+          },
+          {
+            id: "ORD-7839",
+            customer: "Sneha Gupta",
+            date: "2026-03-26",
+            items: 2,
+            total: 5600,
+            status: "cancelled",
+          },
+          {
+            id: "ORD-7838",
+            customer: "Vikram Singh",
+            date: "2026-03-25",
+            items: 4,
+            total: 15600,
+            status: "completed",
+          },
+        ],
+        staff: [
+          {
+            id: 1,
+            name: "Rahul Verma",
+            email: "rahul@nexus.com",
+            role: "Manager",
+            dept: "Operations",
+            status: "active",
+          },
+          {
+            id: 2,
+            name: "Priya Sharma",
+            email: "priya@nexus.com",
+            role: "Sales",
+            dept: "Sales",
+            status: "active",
+          },
+          {
+            id: 3,
+            name: "Amit Patel",
+            email: "amit@nexus.com",
+            role: "Inventory",
+            dept: "Operations",
+            status: "onleave",
+          },
+          {
+            id: 4,
+            name: "Sneha Gupta",
+            email: "sneha@nexus.com",
+            role: "Support",
+            dept: "Support",
+            status: "active",
+          },
+        ],
+        transactions: [
+          {
+            id: "TXN-001",
+            date: "2026-03-27",
+            desc: "Product Sales - Batch #442",
+            category: "Income",
+            amount: 24500,
+            status: "completed",
+          },
+          {
+            id: "TXN-002",
+            date: "2026-03-27",
+            desc: "Inventory Purchase",
+            category: "Expense",
+            amount: -12000,
+            status: "completed",
+          },
+          {
+            id: "TXN-003",
+            date: "2026-03-26",
+            desc: "Salary Payment",
+            category: "Expense",
+            amount: -45000,
+            status: "completed",
+          },
+          {
+            id: "TXN-004",
+            date: "2026-03-26",
+            desc: "UPI Collection",
+            category: "Income",
+            amount: 8900,
+            status: "completed",
+          },
+        ],
+      };
+
+      // Theme Management
+      function initTheme() {
+        if (
+          localStorage.getItem("theme") === "dark" ||
+          (!localStorage.getItem("theme") &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches)
+        ) {
+          document.documentElement.classList.add("dark");
+          updateThemeIcon();
+        }
+      }
+
+      function toggleTheme() {
+        document.documentElement.classList.toggle("dark");
+        const isDark = document.documentElement.classList.contains("dark");
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+        updateThemeIcon();
+        updateCharts();
+      }
+
+      function updateThemeIcon() {
+        const isDark = document.documentElement.classList.contains("dark");
+        document.getElementById("theme-text").textContent = isDark
+          ? "Light Mode"
+          : "Dark Mode";
+      }
+
+      // Sidebar Toggle
+      function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        sidebar.classList.toggle("-translate-x-full");
+      }
+
+      // Section Navigation
+      function switchSection(sectionName) {
+        // Hide all sections
+        document.querySelectorAll(".section-content").forEach((section) => {
+          section.classList.add("hidden");
+        });
+
+        // Show target section
+        document
+          .getElementById(`section-${sectionName}`)
+          .classList.remove("hidden");
+
+        // Update nav active state
+        document.querySelectorAll(".nav-item").forEach((item) => {
+          item.classList.remove(
+            "bg-blue-50",
+            "dark:bg-blue-900/20",
+            "text-blue-600",
+            "dark:text-blue-400",
+          );
+          item.classList.add("text-gray-600", "dark:text-dark-muted");
+        });
+
+        event.currentTarget.classList.remove(
+          "text-gray-600",
+          "dark:text-dark-muted",
+        );
+        event.currentTarget.classList.add(
+          "bg-blue-50",
+          "dark:bg-blue-900/20",
+          "text-blue-600",
+          "dark:text-blue-400",
+        );
+
+        // Close sidebar on mobile
+        if (window.innerWidth < 1024) {
+          document.getElementById("sidebar").classList.add("-translate-x-full");
+        }
+      }
+
+      // Modal Management
+      function openModal(modalId) {
+        document.getElementById(modalId).classList.remove("hidden");
+      }
+
+      function closeModal(modalId) {
+        document.getElementById(modalId).classList.add("hidden");
+      }
+
+      // Toast Notification
+      function showToast(message) {
+        const toast = document.getElementById("toast");
+        document.getElementById("toastMessage").textContent = message;
+        toast.classList.remove("translate-y-20", "opacity-0");
+        setTimeout(() => {
+          toast.classList.add("translate-y-20", "opacity-0");
+        }, 3000);
+      }
+
+      // Inventory Functions
+      function renderInventory() {
+        const tbody = document.getElementById("inventoryTableBody");
+        tbody.innerHTML = store.inventory
+          .map(
+            (item) => `
+                <tr class="hover:bg-gray-50 dark:hover:bg-dark-border/30 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-dark-border flex items-center justify-center text-gray-600 dark:text-dark-muted">
+                                <i class="fas fa-box"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium">${item.name}</p>
+                                <p class="text-xs text-gray-500 dark:text-dark-muted">${item.category || "General"}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-dark-muted font-mono">${item.sku}</td>
+                    <td class="px-6 py-4">
+                        <span class="font-semibold ${item.qty < 5 ? "text-red-600" : "text-gray-900 dark:text-white"}">${item.qty}</span>
+                    </td>
+                    <td class="px-6 py-4 font-medium">₹${item.price}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-dark-muted">₹${item.bulkPrice}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium">
+                            ${item.discount}% OFF
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-medium ${
+                          item.status === "active"
+                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                            : item.status === "low"
+                              ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
+                              : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                        }">
+                            ${item.status === "active" ? "Active" : item.status === "low" ? "Low Stock" : "Out of Stock"}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button class="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mr-2" onclick="editProduct(${item.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors" onclick="deleteProduct(${item.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `,
+          )
+          .join("");
+      }
+
+      function filterInventory() {
+        const search = document
+          .getElementById("inventorySearch")
+          .value.toLowerCase();
+        const rows = document.querySelectorAll("#inventoryTableBody tr");
+        rows.forEach((row) => {
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(search) ? "" : "none";
+        });
+      }
+
+      function saveProduct() {
+        closeModal("addProductModal");
+        showToast("Product saved successfully!");
+      }
+
+      function editProduct(id) {
+        showToast("Edit functionality coming soon");
+      }
+
+      function deleteProduct(id) {
+        if (confirm("Are you sure you want to delete this product?")) {
+          store.inventory = store.inventory.filter((item) => item.id !== id);
+          renderInventory();
+          showToast("Product deleted successfully");
+        }
+      }
+
+      // Orders Functions
+      function renderOrders() {
+        const container = document.getElementById("ordersList");
+        container.innerHTML = store.orders
+          .map(
+            (order) => `
+                <div class="p-6 hover:bg-gray-50 dark:hover:bg-dark-border/30 transition-colors cursor-pointer group">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-gray-100 dark:bg-dark-border flex items-center justify-center text-gray-600 dark:text-dark-muted group-hover:scale-110 transition-transform">
+                                <i class="fas fa-shopping-bag"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-3 mb-1">
+                                    <h4 class="font-bold text-lg">${order.id}</h4>
+                                    <span class="px-3 py-1 rounded-full text-xs font-medium ${
+                                      order.status === "active"
+                                        ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                                        : order.status === "completed"
+                                          ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                                          : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                                    }">
+                                        ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                    </span>
+                                </div>
+                                <p class="text-gray-600 dark:text-dark-muted text-sm">${order.customer} • ${order.items} items</p>
+                                <p class="text-xs text-gray-400 mt-1">${order.date}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-right">
+                                <p class="font-bold text-lg">₹${order.total.toLocaleString()}</p>
+                                <p class="text-xs text-gray-400">Total Amount</p>
+                            </div>
+                            <button class="w-10 h-10 rounded-xl border border-gray-200 dark:border-dark-border hover:bg-gray-100 dark:hover:bg-dark-border flex items-center justify-center transition-colors">
+                                <i class="fas fa-chevron-right text-gray-400"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `,
+          )
+          .join("");
+      }
+
+      // Staff Functions
+      function renderStaff() {
+        const grid = document.getElementById("staffGrid");
+        grid.innerHTML = store.staff
+          .map(
+            (member) => `
+                <div class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-border hover:shadow-lg transition-all-300 hover:-translate-y-1 group">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="relative">
+                            <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=3b82f6&color=fff&size=128" 
+                                 alt="${member.name}" 
+                                 class="w-16 h-16 rounded-full border-4 border-gray-50 dark:border-dark-border group-hover:scale-110 transition-transform">
+                            <span class="absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white dark:border-dark-card ${
+                              member.status === "active"
+                                ? "bg-green-500"
+                                : "bg-yellow-500"
+                            }"></span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="editStaff(${member.id})" class="w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-border flex items-center justify-center text-gray-400 hover:text-blue-600 transition-colors">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteStaff(${member.id})" class="w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-border flex items-center justify-center text-gray-400 hover:text-red-600 transition-colors">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-lg mb-1">${member.name}</h3>
+                    <p class="text-gray-500 dark:text-dark-muted text-sm mb-3">${member.email}</p>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-medium">${member.role}</span>
+                        <span class="px-3 py-1 rounded-full bg-gray-100 dark:bg-dark-border text-gray-600 dark:text-dark-muted text-xs">${member.dept}</span>
+                    </div>
+                    <div class="pt-4 border-t border-gray-100 dark:border-dark-border flex justify-between items-center">
+                        <span class="text-xs text-gray-400">ID: STF-${String(member.id).padStart(3, "0")}</span>
+                        <span class="text-xs font-medium ${
+                          member.status === "active"
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-yellow-600 dark:text-yellow-400"
+                        }">
+                            ${member.status === "active" ? "● Active" : "● On Leave"}
+                        </span>
+                    </div>
+                </div>
+            `,
+          )
+          .join("");
+      }
+
+      function saveStaff() {
+        const name = document.getElementById("staffName").value;
+        const email = document.getElementById("staffEmail").value;
+        const role = document.getElementById("staffRole").value;
+        const dept = document.getElementById("staffDept").value;
+
+        if (!name || !email) {
+          alert("Please fill in all required fields");
+          return;
+        }
+
+        const newStaff = {
+          id: store.staff.length + 1,
+          name,
+          email,
+          role,
+          dept,
+          status: "active",
+        };
+
+        store.staff.push(newStaff);
+        renderStaff();
+        closeModal("addStaffModal");
+        showToast("Staff member added successfully!");
+
+        // Reset form
+        document.getElementById("staffName").value = "";
+        document.getElementById("staffEmail").value = "";
+      }
+
+      function editStaff(id) {
+        showToast("Edit functionality coming soon");
+      }
+
+      function deleteStaff(id) {
+        if (confirm("Are you sure you want to remove this staff member?")) {
+          store.staff = store.staff.filter((s) => s.id !== id);
+          renderStaff();
+          showToast("Staff member removed");
+        }
+      }
+
+      // Finance Functions
+      function renderTransactions() {
+        const tbody = document.getElementById("transactionTable");
+        tbody.innerHTML = store.transactions
+          .map(
+            (txn) => `
+                <tr class="hover:bg-gray-50 dark:hover:bg-dark-border/30 transition-colors">
+                    <td class="px-6 py-4 font-mono text-sm text-gray-600 dark:text-dark-muted">${txn.id}</td>
+                    <td class="px-6 py-4 text-sm">${txn.date}</td>
+                    <td class="px-6 py-4 text-sm font-medium">${txn.desc}</td>
+                    <td class="px-6 py-4 text-sm">
+                        <span class="px-2 py-1 rounded-lg ${
+                          txn.category === "Income"
+                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                            : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                        } text-xs font-medium">${txn.category}</span>
+                    </td>
+                    <td class="px-6 py-4 text-right font-semibold ${
+                      txn.amount > 0
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-red-600 dark:text-red-400"
+                    }">
+                        ${txn.amount > 0 ? "+" : ""}₹${Math.abs(txn.amount).toLocaleString()}
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium">
+                            ${txn.status}
+                        </span>
+                    </td>
+                </tr>
+            `,
+          )
+          .join("");
+      }
+
+      // Payment Functions
+      function saveUpiId() {
+        const upiId = document.getElementById("upiId").value;
+        if (upiId) {
+          showToast("UPI ID updated successfully!");
+          regenerateQR();
+        }
+      }
+
+      function regenerateQR() {
+        const qr = document.getElementById("qrCode");
+        qr.style.opacity = "0.5";
+        setTimeout(() => {
+          qr.style.opacity = "1";
+          showToast("QR Code regenerated");
+        }, 500);
+      }
+
+      function downloadQR() {
+        showToast("QR Code downloaded");
+      }
+
+      function togglePaymentMethod(checkbox, method) {
+        showToast(
+          `${method.toUpperCase()} payments ${checkbox.checked ? "enabled" : "disabled"}`,
+        );
+      }
+
+      // Charts
+      let revenueChart, orderChart, cashFlowChart, paymentChart;
+
+      function initCharts() {
+        const isDark = document.documentElement.classList.contains("dark");
+        const textColor = isDark ? "#94a3b8" : "#64748b";
+        const gridColor = isDark ? "#334155" : "#e2e8f0";
+
+        // Revenue Chart
+        const revenueCtx = document
+          .getElementById("revenueChart")
+          .getContext("2d");
+        revenueChart = new Chart(revenueCtx, {
+          type: "line",
+          data: {
+            labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            datasets: [
+              {
+                label: "Revenue",
+                data: [45000, 52000, 48000, 61000, 58000, 72000, 68000],
+                borderColor: "#3b82f6",
+                backgroundColor: "rgba(59, 130, 246, 0.1)",
+                fill: true,
+                tension: 0.4,
+                borderWidth: 3,
+                pointRadius: 4,
+                pointBackgroundColor: "#3b82f6",
+                pointBorderColor: "#fff",
+                pointBorderWidth: 2,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+            },
+            scales: {
+              x: {
+                grid: { display: false, color: gridColor },
+                ticks: { color: textColor },
+              },
+              y: {
+                grid: { color: gridColor },
+                ticks: {
+                  color: textColor,
+                  callback: function (value) {
+                    return "₹" + value / 1000 + "k";
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        // Order Chart
+        const orderCtx = document.getElementById("orderChart").getContext("2d");
+        orderChart = new Chart(orderCtx, {
+          type: "doughnut",
+          data: {
+            labels: ["Active", "Completed", "Cancelled"],
+            datasets: [
+              {
+                data: [65, 25, 10],
+                backgroundColor: ["#3b82f6", "#22c55e", "#ef4444"],
+                borderWidth: 0,
+                hoverOffset: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "70%",
+            plugins: {
+              legend: { display: false },
+            },
+          },
+        });
+
+        // Cash Flow Chart
+        const cashFlowCtx = document
+          .getElementById("cashFlowChart")
+          .getContext("2d");
+        cashFlowChart = new Chart(cashFlowCtx, {
+          type: "bar",
+          data: {
+            labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
+            datasets: [
+              {
+                label: "Income",
+                data: [125000, 142000, 138000, 156000],
+                backgroundColor: "#22c55e",
+                borderRadius: 6,
+              },
+              {
+                label: "Expense",
+                data: [85000, 92000, 88000, 95000],
+                backgroundColor: "#ef4444",
+                borderRadius: 6,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: "bottom",
+                labels: { color: textColor },
+              },
+            },
+            scales: {
+              x: {
+                grid: { display: false, color: gridColor },
+                ticks: { color: textColor },
+              },
+              y: {
+                grid: { color: gridColor },
+                ticks: {
+                  color: textColor,
+                  callback: function (value) {
+                    return "₹" + value / 1000 + "k";
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        // Payment Chart
+        const paymentCtx = document
+          .getElementById("paymentChart")
+          .getContext("2d");
+        paymentChart = new Chart(paymentCtx, {
+          type: "pie",
+          data: {
+            labels: ["UPI", "Cash", "Card", "Other"],
+            datasets: [
+              {
+                data: [45, 30, 15, 10],
+                backgroundColor: ["#3b82f6", "#22c55e", "#8b5cf6", "#f59e0b"],
+                borderWidth: 2,
+                borderColor: isDark ? "#1e293b" : "#ffffff",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: "bottom",
+                labels: {
+                  color: textColor,
+                  padding: 20,
+                  usePointStyle: true,
+                },
+              },
+            },
+          },
+        });
+      }
+
+      function updateCharts() {
+        const isDark = document.documentElement.classList.contains("dark");
+        const textColor = isDark ? "#94a3b8" : "#64748b";
+        const gridColor = isDark ? "#334155" : "#e2e8f0";
+
+        [revenueChart, orderChart, cashFlowChart, paymentChart].forEach(
+          (chart) => {
+            if (chart) {
+              if (chart.options.scales.x)
+                chart.options.scales.x.ticks.color = textColor;
+              if (chart.options.scales.x)
+                chart.options.scales.x.grid.color = gridColor;
+              if (chart.options.scales.y)
+                chart.options.scales.y.ticks.color = textColor;
+              if (chart.options.scales.y)
+                chart.options.scales.y.grid.color = gridColor;
+              if (
+                chart.options.plugins.legend &&
+                chart.options.plugins.legend.labels
+              ) {
+                chart.options.plugins.legend.labels.color = textColor;
+              }
+              chart.update();
+            }
+          },
+        );
+      }
+
+      // Initialize
+      document.addEventListener("DOMContentLoaded", () => {
+        initTheme();
+        renderInventory();
+        renderOrders();
+        renderStaff();
+        renderTransactions();
+        initCharts();
+      });
+
+      // Handle window resize for charts
+      window.addEventListener("resize", () => {
+        if (revenueChart) revenueChart.resize();
+        if (orderChart) orderChart.resize();
+        if (cashFlowChart) cashFlowChart.resize();
+        if (paymentChart) paymentChart.resize();
+      });
+    </script>
+  </body>
+</html>

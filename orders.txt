@@ -1,9 +1,0 @@
-// Ready for Django REST Framework endpoints:
-GET /api/orders/                    // List all orders
-GET /api/orders/?status=active      // Filter by status
-GET /api/orders/{id}/               // Order details
-POST /api/orders/{id}/cancel/       // Cancel order
-POST /api/orders/{id}/rate/         // Submit rating
-POST /api/orders/{id}/reorder/      // Reorder items
-GET /api/orders/{id}/invoice/       // Download invoice
-GET /api/orders/{id}/track/         // Live tracking data
