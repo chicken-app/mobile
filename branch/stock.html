@@ -1,0 +1,1617 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>Stock Management - MeatMaster Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+            colors: {
+              brand: {
+                50: "#fef2f2",
+                100: "#fee2e2",
+                500: "#ef4444",
+                600: "#dc2626",
+                700: "#b91c1c",
+                900: "#7f1d1d",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      * {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f3f4f6;
+        overflow-x: hidden;
+        padding-bottom: 100px;
+        font-size: 13px;
+        color: #374151;
+      }
+
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      .safe-area-top {
+        padding-top: env(safe-area-inset-top);
+      }
+      .safe-area-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+
+      .glass-nav {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(229, 231, 235, 0.5);
+      }
+
+      .ios-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      }
+
+      .touch-feedback:active {
+        transform: scale(0.96);
+        transition: transform 0.1s;
+      }
+
+      .bottom-sheet {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-radius: 24px 24px 0 0;
+        z-index: 60;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+
+      .sheet-content {
+        flex: 1;
+        overflow-y: auto;
+        padding-bottom: 20px;
+      }
+
+      .sticky-footer {
+        background: white;
+        border-top: 1px solid #f3f4f6;
+        padding: 12px;
+        padding-bottom: calc(12px + env(safe-area-inset-bottom));
+      }
+
+      .bottom-sheet.open {
+        transform: translateY(0);
+      }
+
+      .backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s;
+        z-index: 50;
+      }
+
+      .backdrop.visible {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        z-index: 70;
+        overflow-y: auto;
+        display: none;
+      }
+      .search-item {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f3f4f6;
+      }
+      .search-item:last-child {
+        border-bottom: none;
+      }
+      .search-item.active {
+        background: #f3f4f6;
+      }
+
+      .stock-bar {
+        height: 6px;
+        border-radius: 3px;
+        background: #e5e7eb;
+        overflow: hidden;
+      }
+
+      .stock-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.3s ease;
+      }
+
+      .stock-fill.high {
+        background: #10b981;
+      }
+      .stock-fill.medium {
+        background: #f59e0b;
+      }
+      .stock-fill.low {
+        background: #ef4444;
+      }
+
+      .category-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 12px;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+        transition: all 0.2s;
+      }
+
+      .category-pill.active {
+        background: #dc2626;
+        color: white;
+        border-color: #dc2626;
+      }
+
+      .horizontal-scroll {
+        display: flex;
+        overflow-x: auto;
+        gap: 8px;
+        padding: 4px;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .metric-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+        border: 1px solid #f3f4f6;
+      }
+
+      .low-stock-badge {
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+
+      .toast {
+        position: fixed;
+        top: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-100px);
+        background: rgba(31, 41, 55, 0.95);
+        backdrop-filter: blur(8px);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 50px;
+        font-size: 13px;
+        font-weight: 600;
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .toast.show {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+
+      .warehouse-tab {
+        position: relative;
+        padding: 8px 16px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #6b7280;
+        transition: all 0.2s;
+      }
+
+      .warehouse-tab.active {
+        color: #dc2626;
+      }
+
+      .warehouse-tab.active::after {
+        content: "";
+        position: absolute;
+        bottom: -8px;
+        left: 16px;
+        right: 16px;
+        height: 2px;
+        background: #dc2626;
+        border-radius: 2px;
+      }
+
+      .movement-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .movement-indicator.up {
+        background: #d1fae5;
+        color: #059669;
+      }
+
+      .movement-indicator.down {
+        background: #fee2e2;
+        color: #dc2626;
+      }
+
+      .scan-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 80;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .scan-overlay.active {
+        display: flex;
+      }
+
+      .scan-frame {
+        width: 280px;
+        height: 280px;
+        border: 2px solid #dc2626;
+        border-radius: 20px;
+        position: relative;
+      }
+
+      .scan-line {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #dc2626;
+        box-shadow: 0 0 10px #dc2626;
+        animation: scan 2s linear infinite;
+      }
+
+      @keyframes scan {
+        0% {
+          top: 0;
+        }
+        50% {
+          top: 100%;
+        }
+        100% {
+          top: 0;
+        }
+      }
+
+      .batch-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        background: #f3f4f6;
+        border-radius: 12px;
+        font-size: 11px;
+        color: #6b7280;
+      }
+
+      .expiry-warning {
+        background: #fef3c7;
+        color: #92400e;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .expiry-danger {
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <!-- Status Bar Space -->
+    <div class="safe-area-top bg-white"></div>
+
+    <!-- Header -->
+    <header class="bg-white px-4 py-2 sticky top-0 z-40 shadow-sm border-b border-gray-100">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <button
+            onclick="history.back()"
+            class="w-8 h-8 flex items-center justify-center text-gray-400 active:scale-90 transition-transform"
+          >
+            <i class="fas fa-arrow-left text-base"></i>
+          </button>
+          <div>
+            <h1 class="text-base font-bold text-gray-900 leading-tight">Stock Management</h1>
+            <p class="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Main Kitchen • Live</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            onclick="openScan()"
+            class="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center text-gray-600 active:scale-95 transition-transform"
+          >
+            <i class="fas fa-qrcode text-base"></i>
+          </button>
+          <button
+            onclick="openAddStock()"
+            class="w-9 h-9 bg-brand-600 rounded-lg flex items-center justify-center text-white active:scale-95 transition-transform shadow-lg shadow-brand-600/20"
+          >
+            <i class="fas fa-plus text-base"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+
+    <!-- Main Content -->
+    <main class="px-4 py-4 space-y-4">
+      <!-- Critical Alerts -->
+      <div id="alertsSection" class="space-y-3">
+        <div
+          class="ios-card p-2.5 border-l-4 border-red-500 bg-red-50 touch-feedback"
+          onclick="showLowStockDetail()"
+        >
+          <div class="flex items-start gap-3">
+            <div
+              class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center text-red-600 flex-shrink-0 low-stock-badge"
+            >
+              <i class="fas fa-exclamation-triangle text-sm"></i>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center justify-between mb-0.5">
+                <h3 class="text-xs font-bold text-red-900">Low Stock Alert</h3>
+                <span class="text-[10px] text-red-600 font-bold uppercase">5 items</span>
+              </div>
+              <p class="text-[11px] text-red-700 mb-2 leading-tight">
+                Chicken Breast, Lamb Chops, and 3 others below reorder point
+              </p>
+              <div class="flex gap-2">
+                <button
+                  class="px-2 py-1 bg-red-600 text-white text-[10px] font-bold rounded-lg active:scale-95 transition-transform uppercase"
+                >
+                  Reorder
+                </button>
+                <button
+                  class="px-2 py-1 bg-white text-red-600 text-[10px] font-bold rounded-lg border border-red-200 uppercase"
+                >
+                  Details
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="ios-card p-2.5 border-l-4 border-amber-500 bg-amber-50 touch-feedback"
+          onclick="showExpiryDetail()"
+        >
+          <div class="flex items-start gap-3">
+            <div
+              class="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 flex-shrink-0"
+            >
+              <i class="fas fa-clock text-sm"></i>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center justify-between mb-0.5">
+                <h3 class="text-xs font-bold text-amber-900">Expiring Soon</h3>
+                <span class="text-[10px] text-amber-600 font-bold uppercase"
+                  >12 batches</span
+                >
+              </div>
+              <p class="text-[11px] text-amber-700 leading-tight">
+                Products expiring within 48 hours need attention
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metrics Grid -->
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="ios-card metric-card p-3 touch-feedback">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[11px] text-gray-500 font-medium">Total SKUs</span>
+            <div
+              class="w-7 h-7 bg-blue-50 rounded-full flex items-center justify-center text-blue-600"
+            >
+              <i class="fas fa-cubes text-xs"></i>
+            </div>
+          </div>
+          <p class="text-lg font-bold text-gray-900 leading-none">247</p>
+          <div class="flex items-center gap-1 mt-1.5">
+            <span class="movement-indicator up">
+              <i class="fas fa-arrow-up text-[9px]"></i>
+              12
+            </span>
+            <span class="text-[10px] text-gray-500 font-medium uppercase tracking-tight">this week</span>
+          </div>
+        </div>
+
+        <div class="ios-card metric-card p-3 touch-feedback">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[11px] text-gray-500 font-medium">Stock Value</span>
+            <div
+              class="w-7 h-7 bg-green-50 rounded-full flex items-center justify-center text-green-600"
+            >
+              <i class="fas fa-indian-rupee-sign text-xs"></i>
+            </div>
+          </div>
+          <p class="text-lg font-bold text-gray-900 leading-none">₹89.4k</p>
+          <div class="flex items-center gap-1 mt-1.5">
+            <span class="movement-indicator down">
+              <i class="fas fa-arrow-down text-[9px]"></i>
+              3.2%
+            </span>
+            <span class="text-[10px] text-gray-500 font-medium uppercase tracking-tight">vs last week</span>
+          </div>
+        </div>
+
+        <div class="ios-card metric-card p-3 touch-feedback">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[11px] text-gray-500 font-medium">Turnover</span>
+            <div
+              class="w-7 h-7 bg-purple-50 rounded-full flex items-center justify-center text-purple-600"
+            >
+              <i class="fas fa-sync text-xs"></i>
+            </div>
+          </div>
+          <p class="text-lg font-bold text-gray-900 leading-none">4.2d</p>
+          <p class="text-[10px] text-green-600 mt-1.5 font-medium uppercase tracking-tight">Optimal range</p>
+        </div>
+
+        <div class="ios-card metric-card p-3 touch-feedback">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[11px] text-gray-500 font-medium">Fill Rate</span>
+            <div
+              class="w-7 h-7 bg-amber-50 rounded-full flex items-center justify-center text-amber-600"
+            >
+              <i class="fas fa-percentage text-xs"></i>
+            </div>
+          </div>
+          <p class="text-lg font-bold text-gray-900 leading-none">94.8%</p>
+          <div class="stock-bar mt-2">
+            <div class="stock-fill high" style="width: 94.8%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View Tabs -->
+      <div class="flex border-b border-gray-100 mb-4 bg-white sticky top-[72px] z-30 mx-[-16px] px-4">
+        <button id="inventoryTab" class="warehouse-tab active flex-1 py-2.5 text-center text-xs font-bold" onclick="switchStockView('inventory')">
+          <i class="fas fa-box-open mr-1.5"></i>Inventory
+        </button>
+        <button id="historyTab" class="warehouse-tab flex-1 py-2.5 text-center text-xs font-bold" onclick="switchStockView('history')">
+          <i class="fas fa-history mr-1.5"></i>Purchase History
+        </button>
+      </div>
+
+      <!-- Inventory View -->
+      <div id="inventoryView">
+        <!-- Category Filter -->
+      <div class="horizontal-scroll no-scrollbar py-1">
+        <button
+          class="category-pill active touch-feedback"
+          onclick="filterCategory(this, 'all')"
+        >
+          All Items
+        </button>
+        <button
+          class="category-pill touch-feedback"
+          onclick="filterCategory(this, 'poultry')"
+        >
+          🍗 Poultry
+        </button>
+        <button
+          class="category-pill touch-feedback"
+          onclick="filterCategory(this, 'beef')"
+        >
+          🥩 Beef
+        </button>
+        <button
+          class="category-pill touch-feedback"
+          onclick="filterCategory(this, 'lamb')"
+        >
+          🍖 Lamb
+        </button>
+        <button
+          class="category-pill touch-feedback"
+          onclick="filterCategory(this, 'seafood')"
+        >
+          🐟 Seafood
+        </button>
+        <button
+          class="category-pill touch-feedback"
+          onclick="filterCategory(this, 'pork')"
+        >
+          🥓 Pork
+        </button>
+        <button
+          class="category-pill touch-feedback"
+          onclick="filterCategory(this, 'frozen')"
+        >
+          ❄️ Frozen
+        </button>
+      </div>
+
+      <!-- Stock List -->
+      <div class="space-y-3" id="stockList">
+        <div
+          class="ios-card p-2.5 touch-feedback stock-item border-l-4 border-l-red-500"
+          data-category="poultry"
+          data-warehouse="main"
+          onclick="showStockDetail('chicken-breast')"
+        >
+          <div class="flex items-start justify-between mb-1.5">
+            <div class="flex items-center gap-2">
+              <div
+                class="w-9 h-9 bg-red-50 rounded-lg flex items-center justify-center text-red-600 relative"
+              >
+                <i class="fas fa-drumstick-bite text-base"></i>
+                <span
+                  class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 text-white text-[8px] rounded-full flex items-center justify-center font-bold"
+                  >!</span
+                >
+              </div>
+              <div>
+                <h3 class="text-xs font-bold text-gray-900">Chicken Breast</h3>
+                <p class="text-[9px] text-gray-400 font-mono tracking-tight">
+                  CHB-001 • PREMIUM
+                </p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-sm font-bold text-red-600">12 kg</p>
+              <p class="text-[9px] text-red-500 font-bold uppercase">Min: 50 kg</p>
+            </div>
+          </div>
+
+          <div class="stock-bar mb-2">
+            <div class="stock-fill low" style="width: 24%"></div>
+          </div>
+
+          <div class="flex items-center justify-between text-[11px]">
+            <div class="flex gap-2">
+              <span class="batch-chip">
+                <i class="fas fa-warehouse text-gray-400"></i>
+                Main Kitchen
+              </span>
+              <span class="expiry-danger">
+                <i class="fas fa-calendar-times mr-1"></i>
+                2d left
+              </span>
+            </div>
+            <span class="text-gray-400">1 batch</span>
+          </div>
+        </div>
+
+        <!-- Normal Stock Item -->
+        <div
+          class="ios-card p-2.5 touch-feedback stock-item border-l-4 border-l-gray-300"
+          data-category="beef"
+          data-warehouse="cold"
+          onclick="showStockDetail('wagyu-beef')"
+        >
+          <div class="flex items-start justify-between mb-1.5">
+            <div class="flex items-center gap-2">
+              <div
+                class="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center text-gray-400"
+              >
+                <i class="fas fa-utensils text-base"></i>
+              </div>
+              <div>
+                <h3 class="text-xs font-bold text-gray-900">Wagyu Beef A5</h3>
+                <p class="text-[9px] text-gray-400 font-mono tracking-tight">
+                  SKU: WAG-005 • Japanese Import
+                </p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-sm font-bold text-gray-900">85 kg</p>
+              <p class="text-[9px] text-gray-500 font-bold uppercase">Min: 20 kg</p>
+            </div>
+          </div>
+
+          <div class="stock-bar mb-2">
+            <div class="stock-fill high" style="width: 85%"></div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs">
+            <div class="flex gap-2">
+              <span class="batch-chip">
+                <i class="fas fa-snowflake text-blue-400"></i>
+                Cold Storage
+              </span>
+              <span class="expiry-warning">
+                <i class="fas fa-calendar mr-1"></i>
+                5d left
+              </span>
+            </div>
+            <span class="text-gray-400">3 batches</span>
+          </div>
+        </div>
+
+        <!-- Medium Stock Item -->
+        <div
+          class="ios-card p-4 touch-feedback stock-item"
+          data-category="lamb"
+          data-warehouse="main"
+          onclick="showStockDetail('lamb-chops')"
+        >
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600"
+              >
+                <i class="fas fa-bone text-xl"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-gray-900">Lamb Chops NZ</h3>
+                <p class="text-xs text-gray-500">SKU: LMC-002 • New Zealand</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-lg font-bold text-amber-600">28 kg</p>
+              <p class="text-xs text-amber-500">Min: 30 kg</p>
+            </div>
+          </div>
+
+          <div class="stock-bar mb-2">
+            <div class="stock-fill medium" style="width: 56%"></div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs">
+            <div class="flex gap-2">
+              <span class="batch-chip">
+                <i class="fas fa-warehouse text-gray-400"></i>
+                Main Kitchen
+              </span>
+              <span class="batch-chip">
+                <i class="fas fa-tag text-gray-400"></i>
+                $65/kg
+              </span>
+            </div>
+            <span class="text-gray-400">2 batches</span>
+          </div>
+        </div>
+
+        <!-- Seafood Item -->
+        <div
+          class="ios-card p-4 touch-feedback stock-item"
+          data-category="seafood"
+          data-warehouse="cold"
+          onclick="showStockDetail('salmon')"
+        >
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-12 h-12 bg-cyan-50 rounded-xl flex items-center justify-center text-cyan-600"
+              >
+                <i class="fas fa-fish text-xl"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-gray-900">Atlantic Salmon</h3>
+                <p class="text-xs text-gray-500">SKU: SAL-003 • Fresh Fillet</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-lg font-bold text-gray-900">42 kg</p>
+              <p class="text-xs text-gray-500">Min: 25 kg</p>
+            </div>
+          </div>
+
+          <div class="stock-bar mb-2">
+            <div class="stock-fill high" style="width: 75%"></div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs">
+            <div class="flex gap-2">
+              <span class="batch-chip">
+                <i class="fas fa-snowflake text-blue-400"></i>
+                Cold Storage
+              </span>
+              <span class="expiry-warning">
+                <i class="fas fa-calendar mr-1"></i>
+                3d left
+              </span>
+            </div>
+            <span class="text-gray-400">2 batches</span>
+          </div>
+        </div>
+
+        <!-- Frozen Item -->
+        <div
+          class="ios-card p-4 touch-feedback stock-item"
+          data-category="frozen"
+          data-warehouse="cold"
+          onclick="showStockDetail('frozen-chicken')"
+        >
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600"
+              >
+                <i class="fas fa-snowflake text-xl"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-gray-900">Frozen Chicken Wings</h3>
+                <p class="text-xs text-gray-500">SKU: FCW-008 • Bulk Pack</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-lg font-bold text-gray-900">180 kg</p>
+              <p class="text-xs text-gray-500">Min: 100 kg</p>
+            </div>
+          </div>
+
+          <div class="stock-bar mb-2">
+            <div class="stock-fill high" style="width: 90%"></div>
+          </div>
+
+          <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-tight">
+            <div class="flex gap-1.5">
+              <span class="batch-chip px-1.5 py-0.5 bg-gray-50 rounded border border-gray-100 flex items-center gap-1">
+                <i class="fas fa-snowflake text-blue-400 text-[9px]"></i>
+                Cold Storage
+              </span>
+              <span class="batch-chip text-green-600 bg-green-50 px-1.5 py-0.5 rounded border border-green-100 flex items-center gap-1">
+                <i class="fas fa-check-circle text-green-500 text-[9px]"></i>
+                90 days
+              </span>
+            </div>
+            <span class="text-gray-400">5 batches</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Load More -->
+      <button
+        class="w-full py-3 text-gray-500 text-sm font-medium bg-white rounded-xl border border-gray-200 active:scale-[0.98] transition-transform mt-4"
+      >
+        Load More Items (12 remaining)
+      </button>
+      </div>
+
+      <!-- Purchase History View -->
+      <div id="purchaseHistoryView" class="hidden space-y-3">
+        <!-- History Item 1 -->
+        <div class="ios-card p-2.5">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <span class="text-[9px] font-bold text-brand-600 uppercase tracking-widest bg-brand-50 px-1.5 py-0.5 rounded border border-brand-100">Mar 28, 2:30 PM</span>
+              <h4 class="text-[13px] font-bold text-gray-900 mt-1">Chicken Breast (CHB-001)</h4>
+              <p class="text-[10px] text-gray-400 font-medium mt-0.5">Invoice: BILL-9921 • Fresh Farms Ltd.</p>
+            </div>
+            <div class="text-right">
+              <p class="text-[13px] font-black text-gray-900 leading-tight">₹12,450.00</p>
+              <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-0.5">50 kg @ ₹249.0</p>
+            </div>
+          </div>
+          <div class="flex items-center justify-between pt-2 border-t border-gray-50">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.5 bg-green-100 text-green-700 text-[9px] font-bold rounded uppercase">Loaded</span>
+              <span class="text-[9.5px] text-gray-400 font-bold font-mono">#B2026-032</span>
+            </div>
+            <i class="fas fa-chevron-right text-gray-300 text-[10px]"></i>
+          </div>
+        </div>
+
+        <!-- History Item 2 -->
+        <div class="ios-card p-2.5">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">Mar 25, 11:15 AM</span>
+              <h4 class="text-[13px] font-bold text-gray-900 mt-1">Lamb Chops (LMC-002)</h4>
+              <p class="text-[10px] text-gray-400 font-medium mt-0.5">Invoice: BILL-9884 • Global Meat Imports</p>
+            </div>
+            <div class="text-right">
+              <p class="text-[13px] font-black text-gray-900 leading-tight">₹18,200.00</p>
+              <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-0.5">28 kg @ ₹650.0</p>
+            </div>
+          </div>
+          <div class="flex items-center justify-between pt-2 border-t border-gray-50">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.5 bg-green-100 text-green-700 text-[9px] font-bold rounded uppercase">Loaded</span>
+              <span class="text-[9.5px] text-gray-400 font-bold font-mono">#B2026-029</span>
+            </div>
+            <i class="fas fa-chevron-right text-gray-300 text-[10px]"></i>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="glass-nav fixed bottom-0 left-0 right-0 safe-area-bottom z-[100] pb-safe">
+      <div class="flex justify-around items-center py-2 px-4">
+        <button class="flex flex-col items-center gap-1 p-2 text-gray-400" onclick="window.location.href='home.html'">
+          <i class="fas fa-home text-xl"></i>
+          <span class="text-[10px] font-medium">Home</span>
+        </button>
+        <button class="flex flex-col items-center gap-1 p-2 text-gray-400" onclick="window.location.href='orders.html'">
+          <i class="fas fa-clipboard-list text-xl"></i>
+          <span class="text-[10px] font-medium">Orders</span>
+        </button>
+
+        <!-- FAB -->
+        <div class="relative -top-4">
+          <button onclick="openAddStock()" class="w-11 h-11 bg-gradient-to-br from-brand-600 to-brand-700 rounded-full shadow-lg flex items-center justify-center text-white text-lg active:scale-90 transition-transform border-4 border-gray-50">
+            <i class="fas fa-truck-loading"></i>
+          </button>
+        </div>
+
+        <button class="flex flex-col items-center gap-1 p-2 text-brand-600" onclick="window.location.href='stock.html'">
+          <i class="fas fa-box text-xl"></i>
+          <span class="text-[10px] font-medium">Stock</span>
+        </button>
+        <button class="flex flex-col items-center gap-1 p-2 text-gray-400" onclick="window.location.href='profile.html'">
+          <i class="fas fa-user text-xl"></i>
+          <span class="text-[10px] font-medium">Profile</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Backdrop -->
+    <div id="backdrop" class="backdrop" onclick="closeAllSheets()"></div>
+
+    <!-- Stock Detail Bottom Sheet -->
+    <div id="stockDetailSheet" class="bottom-sheet">
+      <div class="swipe-indicator"></div>
+
+      <div class="px-4 pb-4">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-gray-900">Stock Details</h2>
+          <button
+            onclick="closeAllSheets()"
+            class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div
+          class="ios-card p-4 mb-4 bg-gradient-to-br from-red-50 to-white border-red-100"
+        >
+          <div class="flex items-center gap-4 mb-4">
+            <div
+              class="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center text-red-600 text-2xl"
+            >
+              <i class="fas fa-drumstick-bite"></i>
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-gray-900">Chicken Breast</h3>
+              <p class="text-sm text-gray-500">
+                SKU: CHB-001 • Premium Grade A
+              </p>
+              <div class="flex items-center gap-2 mt-1">
+                <span
+                  class="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-semibold rounded"
+                  >Low Stock</span
+                >
+                <span class="text-xs text-gray-400">• Updated 2h ago</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3 mb-4">
+            <div
+              class="text-center p-3 bg-white rounded-xl border border-red-100"
+            >
+              <p class="text-2xl font-bold text-gray-900">12</p>
+              <p class="text-xs text-gray-500">Current (kg)</p>
+            </div>
+            <div
+              class="text-center p-3 bg-white rounded-xl border border-red-100"
+            >
+              <p class="text-2xl font-bold text-red-600">50</p>
+              <p class="text-xs text-gray-500">Reorder (kg)</p>
+            </div>
+            <div
+              class="text-center p-3 bg-white rounded-xl border border-red-100"
+            >
+              <p class="text-2xl font-bold text-gray-900">200</p>
+              <p class="text-xs text-gray-500">Capacity (kg)</p>
+            </div>
+          </div>
+
+          <div class="stock-bar h-2 mb-1">
+            <div class="stock-fill low" style="width: 24%"></div>
+          </div>
+          <p class="text-xs text-center text-red-600 font-medium">
+            24% remaining • Critical level
+          </p>
+        </div>
+
+        <!-- Batch Details -->
+        <div class="ios-card p-4 mb-4">
+          <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <i class="fas fa-layer-group text-brand-600"></i>
+            Active Batches (3)
+          </h3>
+
+          <div class="space-y-3">
+            <div
+              class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border-l-4 border-red-500"
+            >
+              <div>
+                <p class="font-semibold text-sm text-gray-900">
+                  Batch #B2026-031
+                </p>
+                <p class="text-xs text-gray-500">Received: Mar 25, 2026</p>
+                <p class="text-xs text-red-600 font-medium mt-1">
+                  Expires: Mar 30, 2026 (2 days)
+                </p>
+              </div>
+              <div class="text-right">
+                <p class="font-bold text-gray-900">5 kg</p>
+                <button class="text-xs text-brand-600 font-medium mt-1">
+                  Transfer
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border-l-4 border-amber-400"
+            >
+              <div>
+                <p class="font-semibold text-sm text-gray-900">
+                  Batch #B2026-029
+                </p>
+                <p class="text-xs text-gray-500">Received: Mar 23, 2026</p>
+                <p class="text-xs text-amber-600 font-medium mt-1">
+                  Expires: Apr 1, 2026
+                </p>
+              </div>
+              <div class="text-right">
+                <p class="font-bold text-gray-900">4 kg</p>
+                <button class="text-xs text-brand-600 font-medium mt-1">
+                  Transfer
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border-l-4 border-green-500"
+            >
+              <div>
+                <p class="font-semibold text-sm text-gray-900">
+                  Batch #B2026-027
+                </p>
+                <p class="text-xs text-gray-500">Received: Mar 20, 2026</p>
+                <p class="text-xs text-green-600 font-medium mt-1">
+                  Expires: Apr 3, 2026
+                </p>
+              </div>
+              <div class="text-right">
+                <p class="font-bold text-gray-900">3 kg</p>
+                <button class="text-xs text-brand-600 font-medium mt-1">
+                  Transfer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Movement History -->
+        <div class="ios-card p-4 mb-20">
+          <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <i class="fas fa-history text-brand-600"></i>
+            Recent Movement
+          </h3>
+
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center text-red-600 flex-shrink-0"
+              >
+                <i class="fas fa-minus text-xs"></i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-gray-900">
+                  Stock Deduction
+                </p>
+                <p class="text-xs text-gray-500">Order #ORD-2026-001 • 20 kg</p>
+              </div>
+              <span class="text-xs text-gray-400">2h ago</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div
+                class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 flex-shrink-0"
+              >
+                <i class="fas fa-plus text-xs"></i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-gray-900">
+                  Stock Received
+                </p>
+                <p class="text-xs text-gray-500">Batch #B2026-031 • 15 kg</p>
+              </div>
+              <span class="text-xs text-gray-400">2d ago</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div
+                class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 flex-shrink-0"
+              >
+                <i class="fas fa-exchange-alt text-xs"></i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-gray-900">
+                  Warehouse Transfer
+                </p>
+                <p class="text-xs text-gray-500">
+                  Cold Storage → Main Kitchen • 10 kg
+                </p>
+              </div>
+              <span class="text-xs text-gray-400">3d ago</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sticky Actions -->
+      <div
+        class="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 safe-area-bottom"
+      >
+          <button
+            onclick="openAdjustStock()"
+            class="flex-1 bg-gray-100 text-gray-700 font-semibold py-3 rounded-xl active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+          >
+            <i class="fas fa-edit"></i>
+            Adjust Stock Level
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Stock Sheet -->
+    <div id="addStockSheet" class="bottom-sheet">
+      <div class="swipe-indicator"></div>
+
+      <div class="sheet-content px-4">
+        <div class="flex items-center justify-between mb-4 mt-2">
+          <h2 class="text-xl font-bold text-gray-900">Purchase / Load Stock</h2>
+          <button
+            onclick="closeAllSheets()"
+            class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <form class="space-y-4">
+          <div>
+            <label class="text-xs text-gray-500 mb-1 block font-medium">Bill / Invoice #</label>
+            <input
+              type="text"
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-500"
+              placeholder="e.g. BILL-9921"
+            />
+          </div>
+          <div class="relative">
+            <label class="text-xs text-gray-500 mb-1 block font-medium">Product</label>
+            <div class="relative">
+              <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+              <input 
+                type="text" 
+                id="productSearchInput" 
+                oninput="filterPurchaseProducts()"
+                onfocus="filterPurchaseProducts()"
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-9 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500 font-bold"
+                placeholder="Search product..."
+                autocomplete="off"
+              >
+              <div id="productSearchResults" class="search-results absolute mt-1 w-full max-h-48 border border-gray-100">
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs text-gray-500 mb-1 block font-medium"
+                >Quantity (kg)</label
+              >
+              <input
+                type="number"
+                id="purchaseQuantity"
+                oninput="calculatePurchaseTotal()"
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500 font-bold"
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 mb-1 block font-medium"
+                >Unit Cost (₹)</label
+              >
+              <input
+                type="number"
+                id="purchaseUnitCost"
+                oninput="calculatePurchaseTotal()"
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500 font-bold"
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+
+          <!-- Removed Warehouse Selection -->
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs text-gray-500 mb-1 block font-medium"
+                >Production Date</label
+              >
+              <input
+                type="date"
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 mb-1 block font-medium"
+                >Expiry Date</label
+              >
+              <input
+                type="date"
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="text-xs text-gray-500 mb-1 block font-medium"
+              >Batch Number</label
+            >
+            <input
+              type="text"
+              id="purchaseBatchNumber"
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500 font-bold"
+              placeholder="Auto-generated or scan"
+            />
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-xs text-gray-500 font-medium">Supplier</label>
+              <button type="button" onclick="openAddSupplier()" class="text-brand-600 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 active:scale-95 transition-transform">
+                <i class="fas fa-plus-circle"></i> New Supplier
+              </button>
+            </div>
+            <select
+              id="supplierSelect"
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500"
+            >
+              <option>Select supplier...</option>
+              <option>Fresh Farms Ltd.</option>
+              <option>Global Meat Imports</option>
+              <option>Local Butcher Supply</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-xs text-gray-500 mb-1 block font-medium"
+              >Notes</label
+            >
+            <textarea
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500 resize-none"
+              rows="2"
+              placeholder="Quality notes, storage instructions..."
+            ></textarea>
+          </div>
+          <!-- Summary Card -->
+          <div class="ios-card p-4 bg-brand-50 border-brand-100 mt-4">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-sm text-gray-600">Inventory Value (Est)</span>
+              <span id="purchaseTotalVal" class="text-xl font-bold text-brand-600">₹0.00</span>
+            </div>
+            <p class="text-[10px] text-brand-600/60 leading-none">Total purchase amount recorded for this load.</p>
+          </div>
+        </form>
+      </div>
+
+      <div class="sticky-footer">
+        <button
+          onclick="submitAddStock()"
+          class="w-full bg-brand-600 text-white font-semibold py-3 rounded-xl active:scale-[0.98] transition-transform shadow-lg shadow-brand-600/30 flex items-center justify-center gap-2"
+        >
+          <i class="fas fa-truck-loading"></i>
+          <span>Confirm Purchase & Load</span>
+        </button>
+      </div>
+    </div>
+
+    </div>
+
+    <!-- New Supplier Sheet -->
+    <div id="addSupplierSheet" class="bottom-sheet">
+      <div class="swipe-indicator"></div>
+      <div class="sheet-content px-4">
+        <div class="flex items-center justify-between mb-4 mt-2">
+          <h2 class="text-xl font-bold text-gray-900">Add New Supplier</h2>
+          <button onclick="closeSheet('addSupplierSheet')" class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form class="space-y-4">
+          <div>
+            <label class="text-xs text-gray-500 mb-1 block font-medium">Supplier Name</label>
+            <input type="text" id="newSupplierName" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500" placeholder="e.g. Premium Meat Co.">
+          </div>
+          <div>
+            <label class="text-xs text-gray-500 mb-1 block font-medium">Contact Person</label>
+            <input type="text" id="newSupplierContact" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500" placeholder="Full name">
+          </div>
+          <div>
+            <label class="text-xs text-gray-500 mb-1 block font-medium">Phone Number</label>
+            <input type="tel" id="newSupplierPhone" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500" placeholder="+91 98765 43210">
+          </div>
+        </form>
+      </div>
+      <div class="sticky-footer">
+        <button onclick="submitAddSupplier()" class="w-full bg-brand-600 text-white font-semibold py-3.5 rounded-xl active:scale-[0.98] transition-transform shadow-lg shadow-brand-600/30 flex items-center justify-center gap-2">
+          <i class="fas fa-check-circle"></i>
+          <span>Save Supplier</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Scanner Overlay -->
+    <div id="scanOverlay" class="scan-overlay">
+      <div class="text-white text-center mb-8">
+        <h2 class="text-xl font-bold mb-2">Scan Batch QR Code</h2>
+        <p class="text-sm opacity-80">Position code within frame</p>
+      </div>
+
+      <div class="scan-frame">
+        <div class="scan-line"></div>
+        <div
+          class="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-brand-500 rounded-tl-lg"
+        ></div>
+        <div
+          class="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-brand-500 rounded-tr-lg"
+        ></div>
+        <div
+          class="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-brand-500 rounded-bl-lg"
+        ></div>
+        <div
+          class="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-brand-500 rounded-br-lg"
+        ></div>
+      </div>
+
+      <div class="mt-8 flex gap-4">
+        <button
+          onclick="closeScan()"
+          class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white active:scale-90 transition-transform"
+        >
+          <i class="fas fa-times text-xl"></i>
+        </button>
+        <button
+          class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-gray-900 active:scale-90 transition-transform"
+        >
+          <i class="fas fa-bolt text-xl"></i>
+        </button>
+        <button
+          class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white active:scale-90 transition-transform"
+        >
+          <i class="fas fa-image text-xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast">
+      <i class="fas fa-check-circle text-green-400"></i>
+      <span id="toastMessage">Success!</span>
+    </div>
+
+    <script>
+      // Initialize
+      document.addEventListener("DOMContentLoaded", () => {
+        // Set default dates
+        const today = new Date().toISOString().split("T")[0];
+        document.querySelectorAll('input[type="date"]').forEach((input) => {
+          if (!input.value) input.value = today;
+        });
+      });
+
+      // Sheet Management
+      const mockProducts = [
+        "Chicken Breast (CHB-001)",
+        "Lamb Chops (LMC-002)",
+        "Wagyu Beef (A5/WAG-005)",
+        "Atlantic Salmon (SAL-003)",
+        "Whole Chicken",
+        "Chicken Wings",
+        "Ground Beef",
+        "Pork Belly"
+      ];
+
+      function filterPurchaseProducts() {
+        const input = document.getElementById('productSearchInput').value.toLowerCase();
+        const results = document.getElementById('productSearchResults');
+        results.innerHTML = "";
+        
+        const filtered = mockProducts.filter(p => p.toLowerCase().includes(input));
+        
+        if (filtered.length > 0) {
+          results.style.display = "block";
+          filtered.forEach(p => {
+            const div = document.createElement('div');
+            div.className = "search-item touch-feedback active:bg-gray-100 cursor-pointer";
+            div.innerHTML = `<span class="text-sm font-semibold text-gray-800">${p}</span>`;
+            div.onclick = () => selectPurchaseProduct(p);
+            results.appendChild(div);
+          });
+        } else {
+          results.style.display = "none";
+        }
+      }
+
+      function selectPurchaseProduct(name) {
+        document.getElementById('productSearchInput').value = name;
+        document.getElementById('productSearchResults').style.display = "none";
+      }
+
+      function openAddStock() {
+        document.getElementById("backdrop").classList.add("visible");
+        document.getElementById("addStockSheet").classList.add("open");
+        document.body.style.overflow = "hidden";
+      }
+
+      function openAddSupplier() {
+        document.getElementById("backdrop").classList.add("visible");
+        document.getElementById("addSupplierSheet").classList.add("open");
+        document.body.style.overflow = "hidden";
+      }
+
+      function submitAddSupplier() {
+        const name = document.getElementById('newSupplierName').value;
+        if (!name) return;
+        
+        const select = document.getElementById('supplierSelect');
+        const option = document.createElement('option');
+        option.text = name;
+        select.add(option);
+        select.value = name;
+        
+        closeSheet('addSupplierSheet');
+        showToast("New supplier added! 🏭");
+      }
+
+      function openRestock() {
+        closeAllSheets();
+        setTimeout(() => {
+          document.getElementById("backdrop").classList.add("visible");
+          document.getElementById("restockSheet").classList.add("open");
+          document.body.style.overflow = "hidden";
+        }, 100);
+      }
+
+      function showStockDetail(item) {
+        document.getElementById("backdrop").classList.add("visible");
+        document.getElementById("stockDetailSheet").classList.add("open");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeAllSheets() {
+        document.getElementById("backdrop").classList.remove("visible");
+        document.querySelectorAll(".bottom-sheet").forEach((sheet) => {
+          sheet.classList.remove("open");
+        });
+        document.body.style.overflow = "";
+      }
+
+      function closeSheet(sheetId) {
+        document.getElementById(sheetId).classList.remove("open");
+        
+        // Only remove backdrop if no other sheets are open
+        const openSheets = document.querySelectorAll('.bottom-sheet.open');
+        if (openSheets.length === 0) {
+          document.getElementById("backdrop").classList.remove("visible");
+          document.body.style.overflow = "";
+        }
+      }
+
+      function switchStockView(view) {
+        const invTab = document.getElementById('inventoryTab');
+        const histTab = document.getElementById('historyTab');
+        const invView = document.getElementById('inventoryView');
+        const histView = document.getElementById('purchaseHistoryView');
+        
+        if (view === 'inventory') {
+          invTab.classList.add('active');
+          histTab.classList.remove('active');
+          invView.classList.remove('hidden');
+          histView.classList.add('hidden');
+        } else {
+          histTab.classList.add('active');
+          invTab.classList.remove('active');
+          histView.classList.remove('hidden');
+          invView.classList.add('hidden');
+        }
+      }
+
+      // Warehouse Switching
+      function switchWarehouse(btn, warehouse) {
+        document
+          .querySelectorAll(".warehouse-tab")
+          .forEach((el) => el.classList.remove("active"));
+        btn.classList.add("active");
+
+        // Filter items
+        const items = document.querySelectorAll(".stock-item");
+        items.forEach((item) => {
+          if (warehouse === "all" || item.dataset.warehouse === warehouse) {
+            item.style.display = "block";
+          } else {
+            item.style.display = "none";
+          }
+        });
+
+        showToast("Switched to " + btn.textContent);
+      }
+
+      // Category Filtering
+      function filterCategory(btn, category) {
+        document
+          .querySelectorAll(".category-pill")
+          .forEach((el) => el.classList.remove("active"));
+        btn.classList.add("active");
+
+        const items = document.querySelectorAll(".stock-item");
+        items.forEach((item) => {
+          if (category === "all" || item.dataset.category === category) {
+            item.style.display = "block";
+          } else {
+            item.style.display = "none";
+          }
+        });
+      }
+
+
+      // Scanner
+      function openScan() {
+        document.getElementById("scanOverlay").classList.add("active");
+      }
+
+      function closeScan() {
+        document.getElementById("scanOverlay").classList.remove("active");
+      }
+
+      // Submissions
+      function calculatePurchaseTotal() {
+        const qty = parseFloat(document.getElementById('purchaseQuantity').value) || 0;
+        const cost = parseFloat(document.getElementById('purchaseUnitCost').value) || 0;
+        const total = qty * cost;
+        document.getElementById('purchaseTotalVal').textContent = '₹' + total.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+      }
+
+      function submitAddStock() {
+        closeAllSheets();
+        showToast("Stock added successfully! Batch #B2026-032 created");
+      }
+
+
+      // Detail Views
+      function showLowStockDetail() {
+        showToast("Opening low stock report...");
+      }
+
+      function showExpiryDetail() {
+        showToast("Opening expiry dashboard...");
+      }
+
+      function openAdjustStock() {
+        showToast("Stock adjustment mode activated");
+      }
+
+      function openTransferStock() {
+        showToast("Transfer stock feature coming soon");
+      }
+
+      function openWarehouseManage() {
+        showToast("Warehouse settings");
+      }
+
+      function openNewOrder() {
+        showToast("Redirecting to new order...");
+      }
+
+      // Toast
+      function showToast(message) {
+        const toast = document.getElementById("toast");
+        document.getElementById("toastMessage").textContent = message;
+        toast.classList.add("show");
+        setTimeout(() => {
+          toast.classList.remove("show");
+        }, 3000);
+      }
+
+      // Tab Switching
+      function switchTab(tab) {
+        if (tab === "stock") return;
+        showToast("Navigating to " + tab + "...");
+      }
+
+      // Simulate scan after 3 seconds
+      setInterval(() => {
+        const overlay = document.getElementById("scanOverlay");
+        if (overlay.classList.contains("active")) {
+          closeScan();
+          openAddStock();
+          
+          // Simulate scanning a batch code
+          const fakeBatch = "BATCH-" + Math.floor(Math.random() * 9000 + 1000);
+          document.getElementById('purchaseBatchNumber').value = fakeBatch;
+          
+          showToast(`Success! Scanned ${fakeBatch} 🎥`);
+        }
+      }, 4000);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1468 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>MeatMaster Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+            colors: {
+              brand: {
+                50: "#fef2f2",
+                100: "#fee2e2",
+                500: "#ef4444",
+                600: "#dc2626",
+                700: "#b91c1c",
+                900: "#7f1d1d",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      * {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f3f4f6;
+        overflow-x: hidden;
+        padding-bottom: 80px;
+        font-size: 13.5px;
+        color: #374151;
+      }
+
+      /* Hide scrollbar for Chrome, Safari and Opera */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      /* Hide scrollbar for IE, Edge and Firefox */
+      .no-scrollbar {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+      }
+
+      .safe-area-top {
+        padding-top: env(safe-area-inset-top);
+      }
+
+      .safe-area-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+
+      .glass-nav {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(229, 231, 235, 0.5);
+      }
+
+      .ios-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      }
+
+      .action-button {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+      }
+
+      .action-button-blue {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+      }
+
+      .touch-feedback:active {
+        transform: scale(0.96);
+        transition: transform 0.1s;
+      }
+
+      .slide-up {
+        animation: slideUp 0.3s ease-out;
+      }
+
+      @keyframes slideUp {
+        from {
+          transform: translateY(100%);
+        }
+        to {
+          transform: translateY(0);
+        }
+      }
+
+      .fade-in {
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .pulse-ring {
+        animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+      }
+
+      @keyframes pulse-ring {
+        0% {
+          box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+        }
+        70% {
+          box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+        }
+      }
+
+      .bottom-sheet {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-radius: 24px 24px 0 0;
+        z-index: 60;
+        max-height: 90vh;
+        overflow-y: auto;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .bottom-sheet.open {
+        transform: translateY(0);
+      }
+
+      .backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s;
+        z-index: 50;
+      }
+
+      .backdrop.visible {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .swipe-indicator {
+        width: 40px;
+        height: 4px;
+        background: #d1d5db;
+        border-radius: 2px;
+        margin: 12px auto;
+      }
+
+      .stepper {
+        display: flex;
+        align-items: center;
+        background: #f3f4f6;
+        border-radius: 8px;
+        padding: 4px;
+      }
+
+      .stepper button {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: #374151;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      .stepper input {
+        width: 50px;
+        text-align: center;
+        background: transparent;
+        border: none;
+        font-weight: 600;
+        font-size: 16px;
+      }
+
+      .category-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 16px;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        white-space: nowrap;
+        transition: all 0.2s;
+      }
+
+      .category-chip.active {
+        background: #dc2626;
+        color: white;
+        border-color: #dc2626;
+      }
+
+      .horizontal-scroll {
+        display: flex;
+        overflow-x: auto;
+        gap: 12px;
+        padding: 4px;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .order-card {
+        border-left: 3px solid;
+      }
+
+      .order-card.delivered {
+        border-left-color: #10b981;
+      }
+      .order-card.transit {
+        border-left-color: #3b82f6;
+      }
+      .order-card.processing {
+        border-left-color: #f59e0b;
+      }
+
+      .toast {
+        position: fixed;
+        top: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-100px);
+        background: rgba(31, 41, 55, 0.95);
+        backdrop-filter: blur(8px);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 50px;
+        font-size: 13px;
+        font-weight: 600;
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .toast.show {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+
+      .pull-to-refresh {
+        text-align: center;
+        padding: 20px;
+        color: #6b7280;
+        font-size: 14px;
+        display: none;
+      }
+
+      .pull-to-refresh.visible {
+        display: block;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <!-- Status Bar Space -->
+    <div class="safe-area-top bg-white"></div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast">
+      <i class="fas fa-check-circle text-green-400"></i>
+      <span id="toastMessage">Order placed successfully!</span>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white px-4 py-3 sticky top-0 z-40 shadow-sm">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 bg-gradient-to-br from-brand-600 to-brand-700 rounded-xl flex items-center justify-center text-white shadow-lg"
+          >
+            <i class="fas fa-drumstick-bite text-lg"></i>
+          </div>
+          <div>
+            <h1 class="text-lg font-bold text-gray-900 leading-tight">
+              MeatMaster Pro
+            </h1>
+            <p class="text-xs text-gray-500">Grand Hotel & Resorts</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button
+            class="relative p-2 text-gray-600 active:scale-90 transition-transform"
+          >
+            <i class="fas fa-bell text-xl"></i>
+            <span
+              class="absolute top-1 right-1 w-2 h-2 bg-brand-600 rounded-full"
+            ></span>
+          </button>
+          <img
+            src="https://ui-avatars.com/api/?name=John+Doe&background=dc2626&color=fff"
+            class="w-9 h-9 rounded-full border-2 border-gray-200"
+          />
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="px-3 py-3 space-y-3">
+      <!-- Quick Stats Carousel -->
+      <div class="horizontal-scroll no-scrollbar py-1">
+        <div class="ios-card p-2.5 min-w-[105px] flex-shrink-0">
+          <div
+            class="w-7 h-7 bg-red-50 rounded-full flex items-center justify-center text-brand-600 mb-1"
+          >
+            <i class="fas fa-shopping-bag text-[10px]"></i>
+          </div>
+          <p class="text-base font-extrabold text-gray-900 leading-none">12</p>
+          <p class="text-[9px] text-gray-400 font-bold uppercase tracking-tighter mt-1">Active Orders</p>
+        </div>
+        <div class="ios-card p-2.5 min-w-[105px] flex-shrink-0">
+          <div
+            class="w-7 h-7 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 mb-1"
+          >
+            <i class="fas fa-indian-rupee-sign text-[10px]"></i>
+          </div>
+          <p class="text-base font-extrabold text-gray-900 leading-none">₹45k</p>
+          <p class="text-[9px] text-gray-400 font-bold uppercase tracking-tighter mt-1">Total Spent</p>
+        </div>
+        <div class="ios-card p-2.5 min-w-[105px] flex-shrink-0">
+          <div
+            class="w-7 h-7 bg-amber-50 rounded-full flex items-center justify-center text-amber-600 mb-1"
+          >
+            <i class="fas fa-clock text-[10px]"></i>
+          </div>
+          <p class="text-base font-extrabold text-gray-900 leading-none">5</p>
+          <p class="text-[9px] text-gray-400 font-bold uppercase tracking-tighter mt-1">Pending</p>
+        </div>
+        <div class="ios-card p-2.5 min-w-[105px] flex-shrink-0">
+          <div
+            class="w-7 h-7 bg-purple-50 rounded-full flex items-center justify-center text-purple-600 mb-1"
+          >
+            <i class="fas fa-credit-card text-[10px]"></i>
+          </div>
+          <p class="text-base font-extrabold text-gray-900 leading-none">₹15k</p>
+          <p class="text-[9px] text-gray-400 font-bold uppercase tracking-tighter mt-1">Credit Limit</p>
+        </div>
+      </div>
+
+      <!-- Primary Actions -->
+      <div class="grid grid-cols-2 gap-3">
+        <button
+          onclick="window.location.href = 'order-normal.html'"
+          class="action-button touch-feedback rounded-2xl p-3 text-white flex flex-col items-center gap-1.5 relative overflow-hidden"
+        >
+          <div
+            class="absolute top-0 right-0 w-16 h-16 bg-white opacity-10 rounded-full -mr-8 -mt-8"
+          ></div>
+          <div
+            class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center pulse-ring"
+          >
+            <i class="fas fa-plus text-lg"></i>
+          </div>
+          <div class="text-center">
+            <p class="font-bold text-base">New Order</p>
+            <p class="text-[10px] text-red-100 mt-0.5">Quick Order</p>
+          </div>
+        </button>
+
+        <button
+          onclick="window.location.href = 'order-bulk.html'"
+          class="action-button-blue touch-feedback rounded-2xl p-3 text-white flex flex-col items-center gap-1.5 relative overflow-hidden"
+        >
+          <div
+            class="absolute top-0 right-0 w-16 h-16 bg-white opacity-10 rounded-full -mr-8 -mt-8"
+          ></div>
+          <div
+            class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center"
+          >
+            <i class="fas fa-layer-group text-lg"></i>
+          </div>
+          <div class="text-center">
+            <p class="font-bold text-base">Bulk Order</p>
+            <p class="text-[10px] text-blue-100 mt-0.5">Wholesale</p>
+          </div>
+        </button>
+      </div>
+
+      <!-- Recent Orders -->
+      <div>
+        <div class="flex items-center justify-between mb-3 px-1">
+          <h2 class="text-lg font-bold text-gray-900">Recent Orders</h2>
+          <button class="text-brand-600 text-sm font-medium active:opacity-70">
+            View All
+          </button>
+        </div>
+
+        <div class="space-y-1.5">
+          <div
+            class="ios-card p-2 order-card delivered touch-feedback border-l-4 border-l-green-500"
+            onclick="showOrderDetail('ORD-2026-001')"
+          >
+            <div class="flex justify-between items-start mb-1">
+              <div>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">#ORD-2026-001</p>
+                <p class="text-xs font-bold text-gray-900 mt-0.5 flex items-center gap-1">
+                  <i class="fas fa-user-circle text-gray-400 text-[10px]"></i>
+                  Mohammad Raza
+                </p>
+                <p class="text-[10px] text-gray-400 truncate max-w-[180px]">
+                  Chicken Breast, Lamb Chops
+                </p>
+              </div>
+              <span
+                class="px-1.5 py-0.5 bg-green-50 text-green-700 text-[9px] font-bold uppercase tracking-wider rounded-full border border-green-100"
+                >Delivered</span
+              >
+            </div>
+            <div
+              class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-50"
+            >
+              <div class="flex items-center gap-1 text-[10px] text-gray-400">
+                <i class="far fa-calendar-alt"></i>
+                <span>Today, 10:30 AM</span>
+              </div>
+              <p class="font-bold text-brand-600 text-xs tracking-tight">₹2,450</p>
+            </div>
+          </div>
+
+          <div
+            class="ios-card p-2 order-card transit touch-feedback border-l-4 border-l-blue-500"
+            onclick="showOrderDetail('ORD-2026-002')"
+          >
+            <div class="flex justify-between items-start mb-1">
+              <div>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">#ORD-2026-002</p>
+                <p class="text-xs font-bold text-gray-900 mt-0.5 flex items-center gap-1">
+                  <i class="fas fa-user-circle text-gray-400 text-[10px]"></i>
+                  Sanjay Gupta
+                </p>
+                <p class="text-[10px] text-gray-400 truncate max-w-[180px]">
+                  Premium Steak, Ground Beef
+                </p>
+              </div>
+              <span
+                class="px-1.5 py-0.5 bg-blue-50 text-blue-700 text-[9px] font-bold uppercase tracking-wider rounded-full border border-blue-100"
+                >In Transit</span
+              >
+            </div>
+            <div
+              class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-50"
+            >
+              <div class="flex items-center gap-1 text-[10px] text-gray-400">
+                <i class="fas fa-truck"></i>
+                <span>Arriving 2:00 PM</span>
+              </div>
+              <p class="font-bold text-brand-600 text-xs tracking-tight">₹3,120</p>
+            </div>
+          </div>
+          <div
+            class="ios-card p-2 order-card processing touch-feedback border-l-4 border-l-amber-500"
+            onclick="showOrderDetail('ORD-2026-003')"
+          >
+            <div class="flex justify-between items-start mb-1">
+              <div>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">#ORD-2026-003</p>
+                <p class="text-xs font-bold text-gray-900 mt-0.5 flex items-center gap-1">
+                  <i class="fas fa-user-circle text-gray-400 text-[10px]"></i>
+                  Anita Sharma
+                </p>
+                <p class="text-[10px] text-gray-400 truncate max-w-[180px]">
+                  Whole Chicken, Fish Fillet
+                </p>
+              </div>
+              <span
+                class="px-1.5 py-0.5 bg-amber-50 text-amber-700 text-[9px] font-bold uppercase tracking-wider rounded-full border border-amber-100"
+                >Processing</span
+              >
+            </div>
+            <div
+              class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-50"
+            >
+              <div class="flex items-center gap-1 text-[10px] text-gray-400">
+                <i class="fas fa-history"></i>
+                <span>Preparing</span>
+              </div>
+              <p class="font-bold text-brand-600 text-xs tracking-tight">₹1,840</p>
+            </div>
+          </div>
+  </div>
+        </div>
+      </div>
+
+      <!-- Quick Reorder -->
+      <div>
+        <h2 class="text-base font-bold text-gray-900 mb-2 px-1">Quick Reorder</h2>
+        <div class="horizontal-scroll no-scrollbar py-1">
+          <div
+            class="ios-card p-2 min-w-[100px] flex-shrink-0 touch-feedback"
+            onclick="quickAdd('Chicken Breast')"
+          >
+            <div
+              class="w-9 h-9 bg-red-50 rounded-lg flex items-center justify-center text-brand-600 mb-1.5 mx-auto"
+            >
+              <i class="fas fa-drumstick-bite text-base"></i>
+            </div>
+            <p class="text-xs font-bold text-center text-gray-900 leading-tight">
+              Chicken Breast
+            </p>
+            <p class="text-[9.5px] text-center text-gray-500 mt-0.5 tracking-tight font-medium uppercase">₹45/kg</p>
+          </div>
+          <div
+            class="ios-card p-2 min-w-[100px] flex-shrink-0 touch-feedback"
+            onclick="quickAdd('Lamb Chops')"
+          >
+            <div
+              class="w-9 h-9 bg-amber-50 rounded-lg flex items-center justify-center text-amber-600 mb-1.5 mx-auto"
+            >
+              <i class="fas fa-bone text-base"></i>
+            </div>
+            <p class="text-xs font-bold text-center text-gray-900 leading-tight">
+              Lamb Chops
+            </p>
+            <p class="text-[9.5px] text-center text-gray-500 mt-0.5 tracking-tight font-medium uppercase">₹65/kg</p>
+          </div>
+          <div
+            class="ios-card p-2 min-w-[100px] flex-shrink-0 touch-feedback"
+            onclick="quickAdd('Salmon')"
+          >
+            <div
+              class="w-9 h-9 bg-cyan-50 rounded-lg flex items-center justify-center text-cyan-600 mb-1.5 mx-auto"
+            >
+              <i class="fas fa-fish text-base"></i>
+            </div>
+            <p class="text-xs font-bold text-center text-gray-900 leading-tight">
+              Salmon
+            </p>
+            <p class="text-[9.5px] text-center text-gray-500 mt-0.5 tracking-tight font-medium uppercase">₹55/kg</p>
+          </div>
+          <div
+            class="ios-card p-2 min-w-[100px] flex-shrink-0 touch-feedback"
+            onclick="quickAdd('Beef Steak')"
+          >
+            <div
+              class="w-9 h-9 bg-red-50 rounded-lg flex items-center justify-center text-red-700 mb-1.5 mx-auto"
+            >
+              <i class="fas fa-utensils text-base"></i>
+            </div>
+            <p class="text-xs font-bold text-center text-gray-900 leading-tight">
+              Beef Steak
+            </p>
+            <p class="text-[9.5px] text-center text-gray-500 mt-0.5 tracking-tight font-medium uppercase">₹120/kg</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav
+      class="glass-nav fixed bottom-0 left-0 right-0 safe-area-bottom z-[100] pb-safe"
+    >
+      <div class="flex justify-around items-center py-2 px-4">
+        <button
+          class="flex flex-col items-center gap-1 p-2 text-brand-600"
+          onclick="switchTab('home')"
+        >
+          <i class="fas fa-home text-xl"></i>
+          <span class="text-[10px] font-medium">Home</span>
+        </button>
+        <button
+          class="flex flex-col items-center gap-1 p-2 text-gray-400"
+          onclick="switchTab('orders')"
+        >
+          <i class="fas fa-clipboard-list text-xl"></i>
+          <span class="text-[10px] font-medium">Orders</span>
+        </button>
+
+        <!-- FAB -->
+        <div class="relative -top-4">
+          <button
+            onclick="window.location.href = 'order-normal.html'"
+            class="w-11 h-11 bg-gradient-to-br from-brand-600 to-brand-700 rounded-full shadow-lg flex items-center justify-center text-white text-lg active:scale-90 transition-transform border-4 border-gray-50"
+          >
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+
+        <button
+          class="flex flex-col items-center gap-1 p-2 text-gray-400"
+          onclick="switchTab('stock')"
+        >
+          <i class="fas fa-box text-xl"></i>
+          <span class="text-[10px] font-medium">Stock</span>
+        </button>
+        <button
+          class="flex flex-col items-center gap-1 p-2 text-gray-400"
+          onclick="switchTab('profile')"
+        >
+          <i class="fas fa-user text-xl"></i>
+          <span class="text-[10px] font-medium">Profile</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Backdrop -->
+    <div id="backdrop" class="backdrop" onclick="closeAllSheets()"></div>
+
+    <!-- New Order Bottom Sheet -->
+    <div id="newOrderSheet" class="bottom-sheet">
+      <div class="swipe-indicator"></div>
+
+      <div class="px-4 pb-4">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-gray-900">New Order</h2>
+          <button
+            onclick="closeAllSheets()"
+            class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <!-- Delivery Info -->
+        <div class="ios-card p-4 mb-4">
+          <h3
+            class="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2"
+          >
+            <i class="fas fa-truck text-brand-600"></i>
+            Delivery Details
+          </h3>
+          <div class="space-y-3">
+            <div>
+              <label class="text-xs text-gray-500 mb-1 block"
+                >Delivery Date</label
+              >
+              <input
+                type="date"
+                id="deliveryDate"
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none"
+              />
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 mb-1 block">Time Slot</label>
+              <div class="grid grid-cols-2 gap-2">
+                <button
+                  class="time-slot px-3 py-2 bg-brand-50 border-2 border-brand-600 rounded-xl text-sm font-medium text-brand-700 text-center active:scale-95 transition-transform"
+                  onclick="selectTime(this)"
+                >
+                  6-9 AM
+                </button>
+                <button
+                  class="time-slot px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 text-center active:scale-95 transition-transform"
+                  onclick="selectTime(this)"
+                >
+                  9-12 PM
+                </button>
+                <button
+                  class="time-slot px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 text-center active:scale-95 transition-transform"
+                  onclick="selectTime(this)"
+                >
+                  12-3 PM
+                </button>
+                <button
+                  class="time-slot px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 text-center active:scale-95 transition-transform"
+                  onclick="selectTime(this)"
+                >
+                  3-6 PM
+                </button>
+              </div>
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 mb-1 block">Branch</label>
+              <select
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none"
+              >
+                <option>Main Kitchen - Downtown</option>
+                <option>Branch 2 - Uptown</option>
+                <option>Branch 3 - Airport</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Products -->
+        <div class="ios-card p-4 mb-4">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
+              <i class="fas fa-box-open text-brand-600"></i>
+              Products
+            </h3>
+            <span class="text-xs text-gray-500" id="itemCount">0 items</span>
+          </div>
+
+          <!-- Category Filter -->
+          <div class="horizontal-scroll no-scrollbar mb-4">
+            <button
+              class="category-chip active touch-feedback"
+              onclick="filterCategory(this, 'all')"
+            >
+              All
+            </button>
+            <button
+              class="category-chip touch-feedback"
+              onclick="filterCategory(this, 'poultry')"
+            >
+              🍗 Poultry
+            </button>
+            <button
+              class="category-chip touch-feedback"
+              onclick="filterCategory(this, 'meat')"
+            >
+              🥩 Red Meat
+            </button>
+            <button
+              class="category-chip touch-feedback"
+              onclick="filterCategory(this, 'seafood')"
+            >
+              🐟 Seafood
+            </button>
+          </div>
+
+          <div class="space-y-3" id="productList">
+            <div
+              class="product-item flex items-center justify-between p-2.5 bg-gray-50 rounded-xl"
+              data-category="poultry"
+              data-price="45"
+              data-name="Premium Chicken Breast"
+            >
+              <div class="flex items-center gap-2.5">
+                <div
+                  class="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center text-brand-600"
+                >
+                  <i class="fas fa-drumstick-bite text-base"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-[13px] text-gray-900 leading-tight">
+                    Chicken Breast
+                  </p>
+                  <p class="text-[10px] text-gray-500 uppercase tracking-tighter">₹45/KG • PREMIUM</p>
+                </div>
+              </div>
+              <div class="stepper">
+                <button onclick="updateQty(this, -1)">-</button>
+                <input type="number" value="0" readonly />
+                <button onclick="updateQty(this, 1)">+</button>
+              </div>
+            </div>
+
+            <div
+              class="product-item flex items-center justify-between p-3 bg-gray-50 rounded-xl"
+              data-category="meat"
+              data-price="65"
+              data-name="Lamb Chops"
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600"
+                >
+                  <i class="fas fa-bone"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-sm text-gray-900">Lamb Chops</p>
+                  <p class="text-xs text-gray-500">₹65/kg • NZ Import</p>
+                </div>
+              </div>
+              <div class="stepper">
+                <button onclick="updateQty(this, -1)">-</button>
+                <input type="number" value="0" readonly />
+                <button onclick="updateQty(this, 1)">+</button>
+              </div>
+            </div>
+
+            <div
+              class="product-item flex items-center justify-between p-3 bg-gray-50 rounded-xl"
+              data-category="meat"
+              data-price="120"
+              data-name="Wagyu Beef"
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-12 h-12 bg-red-200 rounded-lg flex items-center justify-center text-red-700"
+                >
+                  <i class="fas fa-utensils"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-sm text-gray-900">
+                    Wagyu Beef A5
+                  </p>
+                  <p class="text-xs text-gray-500">₹120/kg • Premium</p>
+                </div>
+              </div>
+              <div class="stepper">
+                <button onclick="updateQty(this, -1)">-</button>
+                <input type="number" value="0" readonly />
+                <button onclick="updateQty(this, 1)">+</button>
+              </div>
+            </div>
+
+            <div
+              class="product-item flex items-center justify-between p-3 bg-gray-50 rounded-xl"
+              data-category="seafood"
+              data-price="55"
+              data-name="Salmon Fillet"
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center text-cyan-600"
+                >
+                  <i class="fas fa-fish"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-sm text-gray-900">
+                    Salmon Fillet
+                  </p>
+                  <p class="text-xs text-gray-500">₹55/kg • Atlantic</p>
+                </div>
+              </div>
+              <div class="stepper">
+                <button onclick="updateQty(this, -1)">-</button>
+                <input type="number" value="0" readonly />
+                <button onclick="updateQty(this, 1)">+</button>
+              </div>
+            </div>
+
+            <div
+              class="product-item flex items-center justify-between p-3 bg-gray-50 rounded-xl"
+              data-category="meat"
+              data-price="35"
+              data-name="Ground Beef"
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600"
+                >
+                  <i class="fas fa-hamburger"></i>
+                </div>
+                <div>
+                  <p class="font-semibold text-sm text-gray-900">
+                    Ground Beef 80/20
+                  </p>
+                  <p class="text-xs text-gray-500">₹35/kg • Bulk</p>
+                </div>
+              </div>
+              <div class="stepper">
+                <button onclick="updateQty(this, -1)">-</button>
+                <input type="number" value="0" readonly />
+                <button onclick="updateQty(this, 1)">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="ios-card p-4 mb-20">
+          <label class="text-xs text-gray-500 mb-1 block"
+            >Special Instructions</label
+          >
+          <textarea
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none resize-none"
+            rows="2"
+            placeholder="Cutting preferences, packaging..."
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Sticky Footer -->
+      <div
+        class="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 safe-area-bottom"
+      >
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <p class="text-xs text-gray-500">Total Amount</p>
+            <p class="text-2xl font-bold text-gray-900" id="orderTotal">
+              $0.00
+            </p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs text-gray-500" id="totalItems">0 items</p>
+            <p class="text-xs text-green-600">+ $0.00 tax</p>
+          </div>
+        </div>
+        <button
+          onclick="submitOrder()"
+          class="w-full bg-brand-600 text-white font-semibold py-3.5 rounded-xl active:scale-[0.98] transition-transform shadow-lg shadow-brand-600/30 flex items-center justify-center gap-2"
+        >
+          <span>Place Order</span>
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Bulk Order Bottom Sheet -->
+    <div id="bulkOrderSheet" class="bottom-sheet">
+      <div class="swipe-indicator"></div>
+
+      <div class="px-4 pb-4">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-gray-900">Bulk Order</h2>
+          <button
+            onclick="closeAllSheets()"
+            class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <!-- Contract Info -->
+        <div
+          class="ios-card p-4 mb-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200"
+        >
+          <div class="flex items-start gap-3">
+            <div
+              class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white flex-shrink-0"
+            >
+              <i class="fas fa-percentage"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-blue-900">
+                Volume Discounts Available
+              </h3>
+              <p class="text-sm text-blue-700 mt-1">
+                5k+ 15% off • 10k+ 25% off + Free Delivery
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contract Type -->
+        <div class="ios-card p-4 mb-4">
+          <h3 class="text-sm font-bold text-gray-900 mb-3">Contract Type</h3>
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              class="contract-type px-3 py-2 bg-blue-50 border-2 border-blue-600 rounded-xl text-sm font-medium text-blue-700 text-center active:scale-95 transition-transform"
+              onclick="selectContract(this)"
+            >
+              One-time
+            </button>
+            <button
+              class="contract-type px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 text-center active:scale-95 transition-transform"
+              onclick="selectContract(this)"
+            >
+              Recurring
+            </button>
+          </div>
+        </div>
+
+        <!-- Bulk Categories -->
+        <div class="ios-card p-4 mb-4">
+          <h3 class="text-sm font-bold text-gray-900 mb-3">
+            Category Requirements
+          </h3>
+
+          <div class="space-y-4">
+            <!-- Poultry -->
+            <div class="border-b border-gray-100 pb-4">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-xl">🍗</span>
+                  <span class="font-semibold text-gray-900">Poultry</span>
+                </div>
+                <span class="text-xs font-bold text-blue-600">-20%</span>
+              </div>
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-600">Chicken Breast</span>
+                  <div class="stepper">
+                    <button onclick="updateBulkQty(this, -10)">-</button>
+                    <input type="number" value="0" readonly class="w-16" />
+                    <button onclick="updateBulkQty(this, 10)">+</button>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-600">Whole Chicken</span>
+                  <div class="stepper">
+                    <button onclick="updateBulkQty(this, -10)">-</button>
+                    <input type="number" value="0" readonly class="w-16" />
+                    <button onclick="updateBulkQty(this, 10)">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Red Meat -->
+            <div class="border-b border-gray-100 pb-4">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-xl">🥩</span>
+                  <span class="font-semibold text-gray-900">Red Meat</span>
+                </div>
+                <span class="text-xs font-bold text-blue-600">-25%</span>
+              </div>
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-600">Beef Steak</span>
+                  <div class="stepper">
+                    <button onclick="updateBulkQty(this, -10)">-</button>
+                    <input type="number" value="0" readonly class="w-16" />
+                    <button onclick="updateBulkQty(this, 10)">+</button>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-600">Ground Beef</span>
+                  <div class="stepper">
+                    <button onclick="updateBulkQty(this, -10)">-</button>
+                    <input type="number" value="0" readonly class="w-16" />
+                    <button onclick="updateBulkQty(this, 10)">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Seafood -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-xl">🐟</span>
+                  <span class="font-semibold text-gray-900">Seafood</span>
+                </div>
+                <span class="text-xs font-bold text-blue-600">-15%</span>
+              </div>
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-600">Salmon Fillet</span>
+                  <div class="stepper">
+                    <button onclick="updateBulkQty(this, -10)">-</button>
+                    <input type="number" value="0" readonly class="w-16" />
+                    <button onclick="updateBulkQty(this, 10)">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Delivery Schedule -->
+        <div class="ios-card p-4 mb-20">
+          <h3 class="text-sm font-bold text-gray-900 mb-3">Delivery Days</h3>
+          <div class="flex flex-wrap gap-2">
+            <button
+              class="day-chip px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium active:scale-95 transition-transform"
+              onclick="toggleDay(this)"
+            >
+              Mon
+            </button>
+            <button
+              class="day-chip px-4 py-2 bg-gray-100 text-gray-600 rounded-full text-sm font-medium active:scale-95 transition-transform"
+              onclick="toggleDay(this)"
+            >
+              Tue
+            </button>
+            <button
+              class="day-chip px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium active:scale-95 transition-transform"
+              onclick="toggleDay(this)"
+            >
+              Wed
+            </button>
+            <button
+              class="day-chip px-4 py-2 bg-gray-100 text-gray-600 rounded-full text-sm font-medium active:scale-95 transition-transform"
+              onclick="toggleDay(this)"
+            >
+              Thu
+            </button>
+            <button
+              class="day-chip px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium active:scale-95 transition-transform"
+              onclick="toggleDay(this)"
+            >
+              Fri
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sticky Footer -->
+      <div
+        class="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 safe-area-bottom"
+      >
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <p class="text-xs text-gray-500">Est. Monthly Value</p>
+            <div class="flex items-baseline gap-2">
+              <p class="text-2xl font-bold text-gray-900" id="bulkTotal">
+                $0.00
+              </p>
+              <p class="text-sm text-green-600 font-medium" id="bulkSavings">
+                Save 0%
+              </p>
+            </div>
+          </div>
+        </div>
+        <button
+          onclick="submitBulkOrder()"
+          class="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-semibold py-3.5 rounded-xl active:scale-[0.98] transition-transform shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2"
+        >
+          <i class="fas fa-file-contract"></i>
+          <span>Request Contract</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Order Detail Modal -->
+    <div id="orderDetailModal" class="fixed inset-0 z-[70] hidden">
+      <div
+        class="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+        onclick="closeOrderDetail()"
+      ></div>
+      <div
+        class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 max-h-[80vh] overflow-y-auto slide-up"
+      >
+        <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
+
+        <div class="text-center mb-6">
+          <div
+            class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-green-600 mx-auto mb-3"
+          >
+            <i class="fas fa-check text-2xl"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-gray-900" id="detailOrderId">
+            #ORD-2026-001
+          </h2>
+          <p class="text-gray-500 mt-1">Delivered on Mar 28, 2026</p>
+        </div>
+
+        <div class="space-y-4 mb-6">
+          <div class="ios-card p-4">
+            <h3 class="font-bold text-gray-900 mb-3">Items</h3>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center text-brand-600"
+                  >
+                    <i class="fas fa-drumstick-bite"></i>
+                  </div>
+                  <div>
+                    <p class="font-medium text-sm">Chicken Breast</p>
+                    <p class="text-xs text-gray-500">20 kg x $45</p>
+                  </div>
+                </div>
+                <p class="font-bold text-sm">₹900</p>
+              </div>
+              <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600"
+                  >
+                    <i class="fas fa-bone"></i>
+                  </div>
+                  <div>
+                    <p class="font-medium text-sm">Lamb Chops</p>
+                    <p class="text-xs text-gray-500">24 kg x $65</p>
+                  </div>
+                </div>
+                <p class="font-bold text-sm">₹1,560</p>
+              </div>
+            </div>
+            <div
+              class="border-t border-gray-100 mt-3 pt-3 flex justify-between items-center"
+            >
+              <span class="font-bold text-gray-900">Total</span>
+              <span class="font-bold text-xl text-gray-900">₹2,460</span>
+            </div>
+          </div>
+
+          <div class="ios-card p-4" id="deliveryInfoCard">
+            <h3 class="font-bold text-gray-900 mb-3">Delivery Info</h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between" id="addressRow">
+                <span class="text-gray-500">Address</span>
+                <span class="font-medium text-right"
+                  >Main Kitchen,<br />Downtown Branch</span
+                >
+              </div>
+              <div class="flex justify-between" id="driverRow">
+                <span class="text-gray-500">Driver</span>
+                <span class="font-medium">Mike Johnson</span>
+              </div>
+              <div class="flex justify-between" id="contactRow">
+                <span class="text-gray-500">Contact</span>
+                <span class="font-medium text-blue-600">+1 234 567 890</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <button
+            class="flex-1 bg-gray-100 text-gray-700 font-semibold py-3 rounded-xl active:scale-95 transition-transform"
+            onclick="
+              closeOrderDetail();
+              showToast('Downloading invoice...');
+            "
+          >
+            Invoice
+          </button>
+          <button
+            class="flex-1 bg-brand-600 text-white font-semibold py-3 rounded-xl active:scale-95 transition-transform"
+            onclick="
+              closeOrderDetail();
+              showToast('Order cancellation request sent');
+            "
+          >
+            Cancel Order
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Initialize
+      document.addEventListener("DOMContentLoaded", () => {
+        // Set today's date
+        document.getElementById("deliveryDate").valueAsDate = new Date();
+        calculateOrderTotal();
+      });
+
+      // Sheet Management
+      function openNewOrderSheet() {
+        document.getElementById("backdrop").classList.add("visible");
+        document.getElementById("newOrderSheet").classList.add("open");
+        document.body.style.overflow = "hidden";
+      }
+
+      function openBulkOrderSheet() {
+        document.getElementById("backdrop").classList.add("visible");
+        document.getElementById("bulkOrderSheet").classList.add("open");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeAllSheets() {
+        document.getElementById("backdrop").classList.remove("visible");
+        document.querySelectorAll(".bottom-sheet").forEach((sheet) => {
+          sheet.classList.remove("open");
+        });
+        document.body.style.overflow = "";
+      }
+
+      // Selection Functions
+      function selectTime(btn) {
+        document.querySelectorAll(".time-slot").forEach((el) => {
+          el.classList.remove(
+            "bg-brand-50",
+            "border-brand-600",
+            "text-brand-700",
+          );
+          el.classList.add("bg-gray-50", "border-gray-200", "text-gray-600");
+        });
+        btn.classList.remove("bg-gray-50", "border-gray-200", "text-gray-600");
+        btn.classList.add("bg-brand-50", "border-brand-600", "text-brand-700");
+      }
+
+      function selectContract(btn) {
+        document.querySelectorAll(".contract-type").forEach((el) => {
+          el.classList.remove("bg-blue-50", "border-blue-600", "text-blue-700");
+          el.classList.add("bg-gray-50", "border-gray-200", "text-gray-600");
+        });
+        btn.classList.remove("bg-gray-50", "border-gray-200", "text-gray-600");
+        btn.classList.add("bg-blue-50", "border-blue-600", "text-blue-700");
+      }
+
+      function toggleDay(btn) {
+        if (btn.classList.contains("bg-blue-600")) {
+          btn.classList.remove("bg-blue-600", "text-white");
+          btn.classList.add("bg-gray-100", "text-gray-600");
+        } else {
+          btn.classList.remove("bg-gray-100", "text-gray-600");
+          btn.classList.add("bg-blue-600", "text-white");
+        }
+      }
+
+      // Category Filter
+      function filterCategory(btn, category) {
+        document
+          .querySelectorAll(".category-chip")
+          .forEach((el) => el.classList.remove("active"));
+        btn.classList.add("active");
+
+        const items = document.querySelectorAll(".product-item");
+        items.forEach((item) => {
+          if (category === "all" || item.dataset.category === category) {
+            item.style.display = "flex";
+          } else {
+            item.style.display = "none";
+          }
+        });
+      }
+
+      // Quantity Management
+      function updateQty(btn, change) {
+        const input = btn.parentElement.querySelector("input");
+        let val = parseInt(input.value) + change;
+        if (val < 0) val = 0;
+        input.value = val;
+        calculateOrderTotal();
+      }
+
+      function updateBulkQty(btn, change) {
+        const input = btn.parentElement.querySelector("input");
+        let val = parseInt(input.value) + change;
+        if (val < 0) val = 0;
+        input.value = val;
+        calculateBulkTotal();
+      }
+
+      // Calculations
+      function calculateOrderTotal() {
+        let total = 0;
+        let items = 0;
+        document.querySelectorAll(".product-item").forEach((item) => {
+          const qty = parseInt(item.querySelector("input").value);
+          const price = parseFloat(item.dataset.price);
+          if (qty > 0) {
+            total += qty * price;
+            items += qty;
+          }
+        });
+
+        const tax = total * 0.08;
+        const grandTotal = total + tax;
+
+        document.getElementById("orderTotal").textContent =
+          "₹" + grandTotal.toFixed(2);
+        document.getElementById("totalItems").textContent = items + " items";
+        document.getElementById("itemCount").textContent = items + " items";
+      }
+
+      function calculateBulkTotal() {
+        // Simplified calculation for demo
+        const inputs = document.querySelectorAll(
+          "#bulkOrderSheet .stepper input",
+        );
+        let total = 0;
+        inputs.forEach((input, index) => {
+          const qty = parseInt(input.value) || 0;
+          const prices = [45, 40, 120, 100, 55]; // Approximate prices
+          total += qty * (prices[index] || 50);
+        });
+
+        let discount = 0;
+        let discountText = "Save 0%";
+
+        if (total >= 10000) {
+          discount = 0.25;
+          discountText = "Save 25%";
+        } else if (total >= 5000) {
+          discount = 0.15;
+          discountText = "Save 15%";
+        }
+
+        const finalTotal = total * (1 - discount);
+
+        document.getElementById("bulkTotal").textContent =
+          "₹" + finalTotal.toFixed(2);
+        document.getElementById("bulkSavings").textContent = discountText;
+      }
+
+      // Submit Functions
+      function submitOrder() {
+        const total = document.getElementById("orderTotal").textContent;
+        closeAllSheets();
+        showToast("Order placed! Total: " + total);
+
+        // Add to recent orders (visual feedback)
+        setTimeout(() => {
+          location.reload(); // In real app, would prepend to list
+        }, 1500);
+      }
+
+      function submitBulkOrder() {
+        closeAllSheets();
+        showToast(
+          "Bulk contract request submitted! Team will contact you soon.",
+        );
+      }
+
+      // Quick Add
+      function quickAdd(productName) {
+        // Redirection to the full order page with pre-selected item
+        window.location.href = `order-normal.html?item=${encodeURIComponent(productName)}`;
+      }
+
+      // Order Detail
+      function showOrderDetail(orderId) {
+        document.getElementById("detailOrderId").textContent = "#" + orderId;
+
+        // Mock logic for demo purposes:
+        // ORD-2026-003 is treated as 'Offline' in this demo context
+        const isOnline = orderId !== "ORD-2026-003";
+
+        const deliveryInfo = document.getElementById("deliveryInfoCard");
+        if (isOnline) {
+          deliveryInfo.style.display = "block";
+        } else {
+          deliveryInfo.style.display = "none";
+        }
+
+        document.getElementById("orderDetailModal").classList.remove("hidden");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeOrderDetail() {
+        document.getElementById("orderDetailModal").classList.add("hidden");
+        document.body.style.overflow = "";
+      }
+
+      // Toast
+      function showToast(message) {
+        const toast = document.getElementById("toast");
+        document.getElementById("toastMessage").textContent = message;
+        toast.classList.add("show");
+        setTimeout(() => {
+          toast.classList.remove("show");
+        }, 3000);
+      }
+
+      // Tab Switching (placeholder)
+      function switchTab(tab) {
+        // In real app, would switch views
+        window.location.href = tab + ".html";
+        showToast("Switching to " + tab + "...");
+      }
+
+      // Pull to refresh simulation
+      let touchStartY = 0;
+      document.addEventListener("touchstart", (e) => {
+        touchStartY = e.touches[0].clientY;
+      });
+
+      document.addEventListener("touchmove", (e) => {
+        if (window.scrollY === 0 && e.touches[0].clientY > touchStartY + 100) {
+          // Show pull to refresh UI
+        }
+      });
+    </script>
+  </body>
+</html>
